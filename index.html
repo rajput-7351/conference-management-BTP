@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conference Management Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .view {
+            display: none;
+        }
+        .view.active {
+            display: block;
+        }
+        /* Simple transition for view switching */
+        .view {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .view:not(.active) {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .view.active {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Main Container -->
+    <div id="app-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- Header / Navigation -->
+        <header class="bg-white shadow-md rounded-lg p-4 mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Conference Portal</h1>
+                <p id="user-role-display" class="text-sm text-gray-500"></p>
+            </div>
+            <div id="auth-links" class="flex items-center space-x-4">
+                 <span id="user-email-display" class="text-sm font-medium text-gray-600"></span>
+                 <button id="logout-btn" class="hidden bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out">Logout</button>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main id="main-content">
+
+            <!-- Auth View -->
+            <div id="auth-view" class="view active">
+                <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-center mb-6">Login or Sign Up</h2>
+                    <!-- Auth Form -->
+                    <form id="auth-form" class="space-y-4">
+                        <input type="email" id="email" placeholder="Email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <input type="password" id="password" placeholder="Password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <div id="role-selection" class="hidden">
+                            <label for="role" class="block text-sm font-medium text-gray-700">Select your role:</label>
+                            <select id="role" class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="Author">Author</option>
+                                <!-- Other roles are assigned by Owner -->
+                            </select>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
+                            <button type="button" id="login-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out">Login</button>
+                            <button type="button" id="signup-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out">Sign Up</button>
+                        </div>
+                         <p id="auth-error" class="text-red-500 text-sm mt-2 text-center"></p>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Loading View -->
+            <div id="loading-view" class="view text-center py-12">
+                <p class="text-lg font-semibold">Loading your dashboard...</p>
+            </div>
+
+            <!-- Author View -->
+            <div id="author-view" class="view space-y-8">
+                 <!-- Submit Paper Section -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4">Submit a New Paper</h3>
+                    <form id="submit-paper-form" class="space-y-4">
+                        <input type="text" id="paper-title" placeholder="Paper Title" class="w-full p-2 border rounded-md" required>
+                        <textarea id="paper-abstract" placeholder="Abstract" class="w-full p-2 border rounded-md" rows="4" required></textarea>
+                        <input type="text" id="paper-keywords" placeholder="Keywords (comma-separated)" class="w-full p-2 border rounded-md" required>
+                        <div>
+                            <label for="paper-file" class="block text-sm font-medium text-gray-700">Upload Paper (PDF)</label>
+                            <input type="file" id="paper-file" accept=".pdf" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" required>
+                        </div>
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">Submit Paper</button>
+                    </form>
+                </div>
+                <!-- My Submissions -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4">My Submissions</h3>
+                    <div id="author-papers-list" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <!-- Owner View -->
+            <div id="owner-view" class="view space-y-8">
+                <!-- Dashboard Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <h4 class="text-lg font-semibold text-gray-600">Total Papers</h4>
+                        <p id="owner-total-papers" class="text-3xl font-bold">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <h4 class="text-lg font-semibold text-gray-600">Needs Assignment</h4>
+                        <p id="owner-needs-assignment" class="text-3xl font-bold">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <h4 class="text-lg font-semibold text-gray-600">Under Review</h4>
+                        <p id="owner-under-review" class="text-3xl font-bold">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <h4 class="text-lg font-semibold text-gray-600">Awaiting Decision</h4>
+                        <p id="owner-awaiting-decision" class="text-3xl font-bold">0</p>
+                    </div>
+                </div>
+                <!-- User Management -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4">Manage Users</h3>
+                    <form id="add-user-form" class="flex flex-col sm:flex-row items-end space-y-2 sm:space-y-0 sm:space-x-4 mb-6">
+                        <div class="w-full">
+                            <label for="new-user-email" class="text-sm">User Email</label>
+                            <input type="email" id="new-user-email" placeholder="Email to invite" class="w-full p-2 border rounded-md">
+                        </div>
+                        <div class="w-full">
+                             <label for="new-user-role" class="text-sm">Role</label>
+                            <select id="new-user-role" class="w-full p-2 border rounded-md">
+                                <option value="TrackChair">Track Chair</option>
+                                <option value="Reviewer">Reviewer</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Add User</button>
+                    </form>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold mb-2">Track Chairs</h4>
+                            <ul id="track-chairs-list" class="list-disc list-inside bg-gray-50 p-3 rounded"></ul>
+                        </div>
+                         <div>
+                            <h4 class="font-semibold mb-2">Reviewers</h4>
+                            <ul id="reviewers-list" class="list-disc list-inside bg-gray-50 p-3 rounded"></ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- All Papers -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4">All Submitted Papers</h3>
+                    <div id="owner-papers-list" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <!-- Track Chair View -->
+            <div id="track-chair-view" class="view space-y-8">
+                 <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4">My Assigned Papers</h3>
+                    <div id="track-chair-papers-list" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <!-- Reviewer View -->
+            <div id="reviewer-view" class="view space-y-8">
+                 <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4">Papers to Review</h3>
+                    <div id="reviewer-papers-list" class="space-y-4"></div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Modal for Assigning Reviewers -->
+        <div id="assign-reviewer-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+            <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Assign Reviewers</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-500 mb-4" id="modal-paper-title"></p>
+                        <form id="assign-reviewer-form">
+                            <input type="hidden" id="modal-paper-id">
+                            <select id="reviewer-select" multiple class="w-full h-40 p-2 border rounded-md"></select>
+                            <p class="text-xs text-gray-500 mt-2">Hold Ctrl/Cmd to select multiple reviewers.</p>
+                        </form>
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button id="confirm-assign-btn" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
+                            Assign
+                        </button>
+                        <button id="cancel-assign-btn" class="mt-2 px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Submitting Review -->
+        <div id="submit-review-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+            <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+                 <h3 class="text-xl font-bold mb-4">Submit Your Review</h3>
+                 <p class="text-sm text-gray-500 mb-4" id="review-modal-paper-title"></p>
+                 <form id="submit-review-form" class="space-y-4">
+                     <input type="hidden" id="review-modal-paper-id">
+                     <input type="hidden" id="review-modal-assignment-id">
+                     <div>
+                         <label class="block text-sm font-medium">Recommendation</label>
+                         <select id="review-recommendation" class="w-full p-2 border rounded-md" required>
+                            <option value="">Select a recommendation</option>
+                            <option value="Accept">Accept</option>
+                            <option value="Minor Revisions">Minor Revisions</option>
+                            <option value="Major Revisions">Major Revisions</option>
+                            <option value="Reject">Reject</option>
+                         </select>
+                     </div>
+                     <div>
+                         <label class="block text-sm font-medium">Comments for Author</label>
+                         <textarea id="review-comments-author" rows="5" class="w-full p-2 border rounded-md" required></textarea>
+                     </div>
+                      <div>
+                         <label class="block text-sm font-medium">Confidential Comments for Chair</label>
+                         <textarea id="review-comments-confidential" rows="3" class="w-full p-2 border rounded-md"></textarea>
+                     </div>
+                     <div class="flex justify-end space-x-4">
+                        <button type="button" id="cancel-review-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md">Cancel</button>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md">Submit Review</button>
+                     </div>
+                 </form>
+            </div>
+        </div>
+
+        <!-- Modal for Viewing Reviews (Owner & Author) -->
+        <div id="view-reviews-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+            <div class="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+                 <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">Reviews & Feedback</h3>
+                    <button id="close-reviews-modal-btn" class="text-gray-500 hover:text-gray-800">&times;</button>
+                 </div>
+                 <h4 class="text-lg font-semibold mb-2" id="reviews-modal-paper-title"></h4>
+                 <div id="reviews-modal-content" class="space-y-4 max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-md">
+                    <!-- Review content will be injected here -->
+                 </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- All JavaScript is now in main.js -->
+    <script type="module" src="/main.js"></script>
+</body>
+</html>
