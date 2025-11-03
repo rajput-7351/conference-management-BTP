@@ -28,6 +28,18 @@
         .view.active {
             opacity: 1;
         }
+
+        /* --- Tab Styles --- */
+        .role-section.hidden {
+            display: none;
+        }
+        .role-section {
+            display: block;
+        }
+        .nav-tab.active {
+            border-bottom-color: #4f46e5; /* indigo-600 */
+            color: #4f46e5;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -36,15 +48,22 @@
     <div id="app-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
 
         <!-- Header / Navigation -->
-        <header class="bg-white shadow-md rounded-lg p-4 mb-8 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Conference Portal</h1>
-                <p id="user-role-display" class="text-sm text-gray-500"></p>
+        <header class="bg-white shadow-md rounded-lg p-4 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Conference Portal</h1>
+                    <p id="user-role-display" class="text-sm text-gray-500"></p>
+                </div>
+                <div id="auth-links" class="flex items-center space-x-4">
+                     <!-- User's email is now a clickable button -->
+                     <button id="user-email-display-btn" class="text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors">
+                        <span id="user-email-display"></span>
+                     </button>
+                     <button id="logout-btn" class="hidden bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out">Logout</button>
+                </div>
             </div>
-            <div id="auth-links" class="flex items-center space-x-4">
-                 <span id="user-email-display" class="text-sm font-medium text-gray-600"></span>
-                 <button id="logout-btn" class="hidden bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out">Logout</button>
-            </div>
+            <!-- Role-Specific Navigation Bar -->
+            <nav id="role-navigation" class="mt-4 border-t border-gray-200 pt-2 flex space-x-4"></nav>
         </header>
 
         <!-- Dynamic Content Area -->
@@ -80,103 +99,156 @@
             </div>
 
             <!-- Author View -->
-            <div id="author-view" class="view space-y-8">
-                 <!-- Submit Paper Section -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">Submit a New Paper</h3>
-                    <form id="submit-paper-form" class="space-y-4">
-                        <input type="text" id="paper-title" placeholder="Paper Title" class="w-full p-2 border rounded-md" required>
-                        <textarea id="paper-abstract" placeholder="Abstract" class="w-full p-2 border rounded-md" rows="4" required></textarea>
-                        <input type="text" id="paper-keywords" placeholder="Keywords (comma-separated)" class="w-full p-2 border rounded-md" required>
-                        <div>
-                            <label for="paper-file" class="block text-sm font-medium text-gray-700">Upload Paper (PDF)</label>
-                            <input type="file" id="paper-file" accept=".pdf" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" required>
-                        </div>
-                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">Submit Paper</button>
-                    </form>
+            <div id="author-view" class="view">
+                 <!-- Author Sub-View: My Submissions -->
+                <div id="author-submissions-section" class="role-section">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold mb-4">My Submissions</h3>
+                        <div id="author-papers-list" class="space-y-4"></div>
+                    </div>
                 </div>
-                <!-- My Submissions -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">My Submissions</h3>
-                    <div id="author-papers-list" class="space-y-4"></div>
+                 <!-- Author Sub-View: Submit Paper -->
+                <div id="author-submit-section" class="role-section hidden">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold mb-4">Submit a New Paper</h3>
+                        <form id="submit-paper-form" class="space-y-4">
+                            <input type="text" id="paper-title" placeholder="Paper Title" class="w-full p-2 border rounded-md" required>
+                            <textarea id="paper-abstract" placeholder="Abstract" class="w-full p-2 border rounded-md" rows="4" required></textarea>
+                            <input type="text" id="paper-keywords" placeholder="Keywords (comma-separated)" class="w-full p-2 border rounded-md" required>
+                            <div>
+                                <label for="paper-link" class="block text-sm font-medium text-gray-700">Paper Link (e.g., Google Drive, Dropbox)</label>
+                                <input type="url" id="paper-link" placeholder="https://docs.google.com/document/..." class="w-full p-2 border rounded-md" required>
+                            </div>
+                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">Submit Paper</button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
             <!-- Owner View -->
-            <div id="owner-view" class="view space-y-8">
-                <!-- Dashboard Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                        <h4 class="text-lg font-semibold text-gray-600">Total Papers</h4>
-                        <p id="owner-total-papers" class="text-3xl font-bold">0</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                        <h4 class="text-lg font-semibold text-gray-600">Needs Assignment</h4>
-                        <p id="owner-needs-assignment" class="text-3xl font-bold">0</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                        <h4 class="text-lg font-semibold text-gray-600">Under Review</h4>
-                        <p id="owner-under-review" class="text-3xl font-bold">0</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                        <h4 class="text-lg font-semibold text-gray-600">Awaiting Decision</h4>
-                        <p id="owner-awaiting-decision" class="text-3xl font-bold">0</p>
-                    </div>
-                </div>
-                <!-- User Management -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">Manage Users</h3>
-                    <form id="add-user-form" class="flex flex-col sm:flex-row items-end space-y-2 sm:space-y-0 sm:space-x-4 mb-6">
-                        <div class="w-full">
-                            <label for="new-user-email" class="text-sm">User Email</label>
-                            <input type="email" id="new-user-email" placeholder="Email to invite" class="w-full p-2 border rounded-md">
+            <div id="owner-view" class="view">
+                <!-- Owner Sub-View: Dashboard -->
+                <div id="owner-dashboard-section" class="role-section">
+                    <!-- Dashboard Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                            <h4 class="text-lg font-semibold text-gray-600">Total Papers</h4>
+                            <p id="owner-total-papers" class="text-3xl font-bold">0</p>
                         </div>
-                        <div class="w-full">
-                             <label for="new-user-role" class="text-sm">Role</label>
-                            <select id="new-user-role" class="w-full p-2 border rounded-md">
-                                <option value="TrackChair">Track Chair</option>
-                                <option value="Reviewer">Reviewer</option>
-                            </select>
+                        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                            <h4 class="text-lg font-semibold text-gray-600">Needs Assignment</h4>
+                            <p id="owner-needs-assignment" class="text-3xl font-bold">0</p>
                         </div>
-                        <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Add User</button>
-                    </form>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h4 class="font-semibold mb-2">Track Chairs</h4>
-                            <ul id="track-chairs-list" class="list-disc list-inside bg-gray-50 p-3 rounded"></ul>
+                        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                            <h4 class="text-lg font-semibold text-gray-600">Under Review</h4>
+                            <p id="owner-under-review" class="text-3xl font-bold">0</p>
                         </div>
-                         <div>
-                            <h4 class="font-semibold mb-2">Reviewers</h4>
-                            <ul id="reviewers-list" class="list-disc list-inside bg-gray-50 p-3 rounded"></ul>
+                        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                            <h4 class="text-lg font-semibold text-gray-600">Awaiting Decision</h4>
+                            <p id="owner-awaiting-decision" class="text-3xl font-bold">0</p>
                         </div>
                     </div>
                 </div>
-                <!-- All Papers -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">All Submitted Papers</h3>
-                    <div id="owner-papers-list" class="space-y-4"></div>
+                <!-- Owner Sub-View: Paper Management -->
+                <div id="owner-papers-section" class="role-section hidden">
+                    <!-- All Papers -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold">All Submitted Papers</h3>
+                            <button id="export-csv-btn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm">
+                                Export to CSV
+                            </button>
+                        </div>
+                        <div id="owner-papers-list" class="space-y-4"></div>
+                    </div>
+                </div>
+                <!-- Owner Sub-View: User Management -->
+                <div id="owner-users-section" class="role-section hidden">
+                    <!-- User Management -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold mb-4">Manage Users</h3>
+                        <form id="add-user-form" class="flex flex-col sm:flex-row items-end space-y-2 sm:space-y-0 sm:space-x-4 mb-6">
+                            <div class="w-full">
+                                <label for="new-user-email" class="text-sm">User Email</label>
+                                <input type="email" id="new-user-email" placeholder="Email to invite" class="w-full p-2 border rounded-md">
+                            </div>
+                            <div class="w-full">
+                                 <label for="new-user-role" class="text-sm">Role</label>
+                                <select id="new-user-role" class="w-full p-2 border rounded-md">
+                                    <option value="TrackChair">Track Chair</option>
+                                    <option value="Reviewer">Reviewer</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Add User</button>
+                        </form>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold mb-2">Track Chairs</h4>
+                                <ul id="track-chairs-list" class="list-disc list-inside bg-gray-50 p-3 rounded"></ul>
+                            </div>
+                             <div>
+                                <h4 class="font-semibold mb-2">Reviewers</h4>
+                                <ul id="reviewers-list" class="list-disc list-inside bg-gray-50 p-3 rounded"></ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Track Chair View -->
-            <div id="track-chair-view" class="view space-y-8">
-                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">My Assigned Papers</h3>
-                    <div id="track-chair-papers-list" class="space-y-4"></div>
+            <div id="track-chair-view" class="view">
+                <div id="trackchair-papers-section" class="role-section">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold mb-4">My Assigned Papers</h3>
+                        <div id="track-chair-papers-list" class="space-y-4"></div>
+                    </div>
                 </div>
             </div>
 
             <!-- Reviewer View -->
-            <div id="reviewer-view" class="view space-y-8">
-                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">Papers to Review</h3>
-                    <div id="reviewer-papers-list" class="space-y-4"></div>
+            <div id="reviewer-view" class="view">
+                <div id="reviewer-papers-section" class="role-section">
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold mb-4">Papers to Review</h3>
+                        <div id="reviewer-papers-list" class="space-y-4"></div>
+                    </div>
                 </div>
             </div>
 
         </main>
 
-        <!-- Modal for Assigning Reviewers -->
+        <!-- Modals -->
+
+        <!-- NEW: My Profile Modal -->
+        <div id="profile-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+            <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">My Profile</h3>
+                    <button id="close-profile-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+                </div>
+                <form id="profile-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium">Email</label>
+                        <input type="email" id="profile-email" class="w-full p-2 border rounded-md bg-gray-100" disabled>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Role</label>
+                        <input type="text" id="profile-role" class="w-full p-2 border rounded-md bg-gray-100" disabled>
+                    </div>
+                    <!-- This section is only for Reviewers -->
+                    <div id="expertise-section" class="hidden">
+                        <label for="profile-expertise" class="block text-sm font-medium">Areas of Expertise (comma-separated)</label>
+                        <textarea id="profile-expertise" rows="3" class="w-full p-2 border rounded-md" placeholder="e.g., AI, Machine Learning, Database Systems"></textarea>
+                    </div>
+                    <div class="flex justify-between items-center pt-4">
+                        <button type="button" id="change-password-btn" class="text-sm text-indigo-600 hover:underline">Send Password Reset Email</button>
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Save Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Assigning Reviewers Modal -->
         <div id="assign-reviewer-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
             <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
                 <div class="mt-3 text-center">
@@ -201,7 +273,7 @@
             </div>
         </div>
 
-        <!-- Modal for Submitting Review -->
+        <!-- Submitting Review Modal -->
         <div id="submit-review-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
             <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
                  <h3 class="text-xl font-bold mb-4">Submit Your Review</h3>
@@ -235,12 +307,12 @@
             </div>
         </div>
 
-        <!-- Modal for Viewing Reviews (Owner & Author) -->
+        <!-- Viewing Reviews Modal -->
         <div id="view-reviews-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
             <div class="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
                  <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold">Reviews & Feedback</h3>
-                    <button id="close-reviews-modal-btn" class="text-gray-500 hover:text-gray-800">&times;</button>
+                    <button id="close-reviews-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
                  </div>
                  <h4 class="text-lg font-semibold mb-2" id="reviews-modal-paper-title"></h4>
                  <div id="reviews-modal-content" class="space-y-4 max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-md">
@@ -255,3 +327,4 @@
     <script type="module" src="/main.js"></script>
 </body>
 </html>
+
