@@ -1,0 +1,17 @@
+{
+  "name": "conference-management-tool",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+  },
+  "dependencies": {
+    "vite": "^5.2.11",  
+    "@emailjs/browser": "^4.3.3"
+  }
+}

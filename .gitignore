@@ -1,5 +1,17 @@
+# Dependencies
+/node_modules
+
+# Build output
+/dist
+
+# Environment Variables (CRITICAL)
+.env
 .env.local
-package-lock.json
-package.json
-node_modules
+.env.*.local
+
+# Old file (optional, but good to keep)
 conferenceManagementTool.html
+
+# System files
+.DS_Store
+Thumbs.db
