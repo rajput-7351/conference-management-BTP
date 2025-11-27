@@ -100,28 +100,66 @@
                 <p class="text-lg font-semibold">Loading your dashboard...</p>
             </div>
 
+
+
+
+
+
             <!-- NEW: Welcome View (for ALL roles) -->
             <div id="welcome-view" class="view">
                 <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-                    <div class="md:flex">
-                        <div class="md:flex-shrink-0">
+                    <!-- 'items-stretch' ensures images and text box are the same height -->
+                    <div class="md:flex items-stretch">
+                        
+                        <!-- LEFT: Conference Chair Image -->
+                        <div class="md:w-1/4 md:flex-shrink-0 relative">
                             <!-- 
-                              IMPORTANT: PASTE YOUR IMAGE URL HERE
-                              Replace the 'src' link below with the link you got from Postimages or ImgBB
+                               PASTE VISHNU'S IMAGE LINK HERE 
                             -->
-                            <img class="h-48 w-full object-cover md:h-full md:w-64" src="https://i.postimg.cc/bw8dpb45/20250521-131127.jpg" alt="Photo of Vishnu Tomar">
+                            <img class="h-64 w-full object-cover md:h-full md:absolute md:inset-0" 
+                                 src="https://i.postimg.cc/bw8dpb45/20250521-131127.jpg" 
+                                 alt="Vishnu Tomar">
                         </div>
-                        <div class="p-8">
-                            <div class="text-sm font-semibold text-indigo-600 uppercase tracking-wide">A Letter from the Conference Chair</div>
-                            <h1 class="block mt-1 text-3xl font-bold text-gray-900">VISHNU TOMAR</h1>
-                            <p class="mt-4 text-gray-600">Welcome to our new conference management platform. This tool was built under guidance of prof. servesh agnihotri, led by Vishnu Tomar from LNMIIT. Read our chair's letter to learn more about our mission.</p>
-                            <button id="read-letter-btn" class="mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">
-                                Read Vishnu's Letter
-                            </button>
+                        
+                        <!-- CENTER: Text Content -->
+                        <!-- 'flex-1' makes this box grow to fill the middle space -->
+                        <div class="p-8 md:flex-1 flex flex-col justify-center bg-gray-50">
+                            <div class="text-sm font-semibold text-indigo-600 uppercase tracking-wide">
+                                A Letter from the Conference Chair and Professor
+                            </div>
+                            <h1 class="block mt-2 text-2xl font-bold text-gray-900">
+                                VISHNU TOMAR &amp; PROF. [servesh agnihotri and vikas sharma]
+                            </h1>
+                            <p class="mt-4 text-gray-600">
+                                Welcome to our new conference management platform. This tool was built under guidance of prof. servesh agnihotri. Read our chair's letter to learn more about our mission
+                            </p>
+                            <div class="mt-6">
+                                <button id="read-letter-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">
+                                    Read Vishnu's Letter
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- RIGHT: Professor Image -->
+                        <div class="md:w-1/4 md:flex-shrink-0 relative">
+                            <!-- 
+                               PASTE PROFESSOR'S IMAGE LINK HERE 
+                            -->
+                            <img class="h-64 w-full object-cover md:h-full md:absolute md:inset-0" 
+                                 src="https://i.postimg.cc/k40mMm3Z/servesh-sir.png" 
+                                 alt="Professor">
+                        </div>
+
                     </div>
                 </div>
             </div>
+
+
+
+
+
+
+            
 
             <!-- Author View -->
             <div id="author-view" class="view">
@@ -255,8 +293,7 @@
                     <p>To all our esteemed colleagues, authors, and reviewers,</p>
                     <p>Welcome to the official platform for our academic conference. I am Vishnu Tomar, the Conference Chair, and it is my distinct honor to introduce this tool.</p>
                     <p>This conference management tool was designed from the ground up to solve a simple problem: to make the process of submitting, reviewing, and publishing academic work as seamless and efficient as possible. We wanted to move beyond clunky email chains and spreadsheets and create a single, transparent, real-time environment for everyone.</p>
-                    <p>What makes this project truly special is its origin. This platform is not the product of a single institution but a testament to the power of collaboration. We have brought together talented students and faculty from different colleges, each bringing unique perspectives and skills to the table.</p>
-                    <p>This ambitious project was made possible through our foundational partnership with LNMIIT. Their leadership, resources, and commitment to innovation were the driving force that turned our shared vision into a reality. We are incredibly grateful for their support.</p>
+                    <p>This ambitious project was made possible under guidance of prof. Servesh Agnihotri and prof. vikas sharma. We are incredibly grateful for their support.</p>
                     <p>Whether you are an author submitting your latest research, a reviewer lending your expertise, or a track chair managing the process, this tool was built for you. We are excited to see the incredible work that will be shared through this platform.</p>
                     <p>Sincerely,</p>
                     <p class="font-semibold">Vishnu Tomar<br>Conference Chair</p>
