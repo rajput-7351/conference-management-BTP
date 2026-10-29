@@ -1,0 +1,19 @@
+# Vercel should only deploy the frontend — ignore everything else
+
+# Python backend (entire folder — deployed separately on Render)
+ai-backend/
+
+# Python artifacts
+*.pyc
+__pycache__/
+*.py
+
+# Large unnecessary files
+btp sample report/
+screenshot and chat data/
+report.tex
+PROJECT_DOCUMENTATION.md
+render.yaml
+
+# Dev dependencies (Vercel installs fresh from package.json)
+node_modules/
