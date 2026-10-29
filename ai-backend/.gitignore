@@ -1,0 +1,19 @@
+# Virtual environment (NEVER commit this - it's huge)
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment secrets (NEVER commit API keys)
+.env
+
+# Agent file outputs (runtime generated)
+agent_outputs/
+
+# OS files
+.DS_Store
+Thumbs.db

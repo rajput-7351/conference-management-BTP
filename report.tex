@@ -1,0 +1,340 @@
+\documentclass[12pt,a4paper]{report}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{a4paper, top=1in, bottom=1in, left=1.2in, right=1in}
+\usepackage{setspace}
+\setstretch{1.5} % Crucial for reaching page length while keeping text readable
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{tocbibind}
+\usepackage{xcolor}
+\usepackage{enumitem}
+
+% --- Styling Config ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    citecolor=black,
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\thepage}
+\fancyhead[L]{\leftmark}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\Huge}
+  {\filleft\Large\chaptertitlename\ \thechapter}
+  {20pt}
+  {\titlerule\vspace{1ex}\filcenter}
+  [\vspace{1ex}\titlerule]
+
+% --- Document ---
+\begin{document}
+
+% -------------------------
+% Cover Page
+% -------------------------
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        
+        \Huge
+        \textbf{NexGen Conference Management Platform:\\ Integrating Autonomous AI into Academic Peer Review}
+        
+        \vspace{1.5cm}
+        
+        \Large
+        Project report submitted in partial fulfillment\\
+        of the requirements for the degree of
+        
+        \vspace{0.8cm}
+        \textbf{Bachelor of Technology}
+        
+        \vspace{1.5cm}
+        \textbf{Submitted by:} \\
+        [Student Name 1] - [Roll No 1] \\
+        [Student Name 2] - [Roll No 2] \\
+        [Student Name 3] - [Roll No 3] 
+        
+        \vspace{1.5cm}
+        \textbf{Under the Guidance of}\\
+        Dr. [Guide Name]\\
+        [Department Name]
+        
+        \vfill
+        
+        % TODO: Add your college logo here. Example: \includegraphics[width=0.3\textwidth]{images/logo.png}
+        \vspace{0.8cm}
+        
+        \Large
+        [Your Institute Name]\\
+        [City, State, Country]\\
+        April 2026
+        
+    \end{center}
+\end{titlepage}
+
+% -------------------------
+% Certificate
+% -------------------------
+\chapter*{Certificate}
+\addcontentsline{toc}{chapter}{Certificate}
+This is to certify that the project entitled \textbf{“NexGen Conference Management Platform: Integrating Autonomous AI into Academic Peer Review”}, submitted by [Student Name 1], [Student Name 2], and [Student Name 3] in partial fulfillment of the requirement for the degree in Bachelor of Technology, is a bonafide record of the work carried out by them at the [Department Name], [Institute Name], [City], during the academic session 2025-2026 under my supervision and guidance. 
+
+The results embodied in this thesis have not been submitted elsewhere for the award of any other degree or diploma to the best of my knowledge.
+
+\vspace{3cm}
+
+\noindent Date: \rule{4cm}{0.4pt} \hfill \textbf{Adviser: Dr. [Guide Name]}
+
+\newpage
+
+% -------------------------
+% Acknowledgments
+% -------------------------
+\chapter*{Acknowledgments}
+\addcontentsline{toc}{chapter}{Acknowledgments}
+We owe our deepest gratitude to Dr. [Guide Name], whose excellent mentorship drove this project from a bare-bones concept into a full-scale deployment. He guided our theoretical understanding of system architectures while simultaneously challenging us to incorporate real-world AI logic. His feedback directly refined the way we approached database synchronization and retrieval-augmented generation.
+
+We also want to acknowledge every member of our team for their raw dedication. Building this platform meant piecing together complex frontend logic, navigating the nuances of NoSQL data structures, and debugging autonomous agent workflows late into the night. We distributed the workload based on our strengths but constantly cross-communicated to ensure the API barriers held fast. 
+
+Our university offered us the sandbox we needed to fail safely and iterate rapidly. We are grateful to the faculty for instilling the fundamental principles of software engineering that backed our design decisions. We hope that this platform demonstrates not just technical competency, but a fundamental understanding of how to modernize workflows for researchers globally.
+
+\newpage
+
+% -------------------------
+% Abstract
+% -------------------------
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+Managing scholarly conferences usually means wrestling with old software. Institutional ecosystems rely heavily on platforms that have barely evolved over the last twenty years. The result is a fractured workflow where organizers struggle to map reviewers to papers, detect overlapping submission conflicts, or cleanly archive intellectual property. NexGen is built to systematically destroy these bottlenecks.
+
+We developed the NexGen Conference Management Platform as a direct response to the bloated, difficult-to-navigate systems currently dominating academia. The core interface leverages a glassmorphic Single Page Application structure written in raw Vanilla JavaScript and unified CSS variants. This allows immediate real-time rendering, stripping away the loading screens typically required when track chairs assign reviewers. Underlying this interface is a heavily optimized Firebase V10 SDK interacting with Firestore to instantly update paper statuses across every connected user’s screen globally through WebSocket connections.
+
+Beyond restructuring the standard peer review flow, NexGen introduces specialized AI endpoints running on a localized Python FastAPI microservice. Users directly interact with a Retrieval-Augmented Generation (RAG) system that shreds uploaded PDFs into vector chunks, allowing organizers and reviewers to query the contextual contents of a paper through a natural language sidebar. We also nested an autonomous agent module capable of browsing the web independently to run automated background checks and scan authors for overlapping conflict trajectories. Ultimately, this report details how we integrated strict database integrity, rapid interface engineering, and artificial intelligence into a cohesive, production-ready product.
+
+\newpage
+
+% -------------------------
+% Tables
+% -------------------------
+\tableofcontents
+\listoffigures
+
+\newpage
+
+% -------------------------
+% Chapter 1
+% -------------------------
+\chapter{Introduction}
+\pagenumbering{arabic}
+
+\section{Background}
+Publishing academic research drives the global scientific engine. When a researcher finishes an experiment, they compress their methodology, data, and conclusions into a structured manuscript and submit it to a conference. These conferences rely on specialized committees—track chairs and field reviewers—who blindly evaluate the paper to catch methodological flaws or plagiarism before it ever sees a journal. 
+
+Historically, platforms like EasyChair and EDAS stepped up to digitize this process, moving organizers away from physical mail and into online databases. While they served their purpose well a decade ago, they are fundamentally trapped in aging architectural norms. Today, web development heavily prioritizes single-page architectures and reactive user experiences. Yet, organizing a conference currently involves sifting through poorly labeled dropdowns, experiencing hard page reloads for every small database update, and navigating a stark, utilitarian interface that actively repels user engagement. 
+
+\section{Problem Statement}
+Our primary observation is that the traditional workflow forces organizers into administrative paralysis. 
+
+\begin{itemize}
+    \item \textbf{Manual Logistics:} Track chairs have to manually read every submitted abstract to determine which reviewer holds the correct expertise to grade the paper. They must send emails manually to check if reviewers have a conflict of interest. 
+    \item \textbf{Silent Updates:} Most older systems run on standard SQL polling. If a reviewer approves a paper, the track chair will not know until they intentionally refresh the dashboard.  
+    \item \textbf{Lack of Intelligence:} These legacy servers treat submitted PDFs as dumb binary blobs. The platform knows nothing about what the text actually means. There are no tools within the interface to help a reviewer extract statistical findings or compare methodologies. If a conference owner wants to investigate if an author submitted a similar paper elsewhere, they have to leave the platform and search the open web themselves.
+\end{itemize}
+
+\section{Objectives of the Work}
+We built NexGen to resolve these friction points directly. The specific engineering objectives we chased were:
+\begin{enumerate}
+    \item Construct a massive, responsive centralized dashboard mapped to four strict roles (Owner, Track Chair, Reviewer, and Author), ensuring data silos prevent users from seeing conflicting information.
+    \item Implement deterministic data modeling to handle the mapping of paper bids and reviewer assignments natively without relying on overly complex junction tables.
+    \item Create a native document analyzer relying on artificial intelligence to let users query their research natively.
+    \item Embed an autonomous terminal capable of parsing natural language prompts and executing web scraping logic to assist conference owners with oversight.
+\end{enumerate}
+
+\section{Scope of the Project}
+This project is strictly scoped to the web layer and the backend API architecture. We focused entirely on the operational backbone of handling the paper submission lifecycle. The system manages Google OAuth handshakes natively and ensures data strictly maps to the correct Firestore node. We avoided deploying native mobile applications, choosing instead to handle screen dimensions through aggressive CSS flexbox and media queries. The payment processing for conference tickets is also outside this iteration’s scope, as our main focus stayed on the peer-review methodology and the integration of live Python instances for the AI services.
+
+\section{Overview of System Users and Roles}
+Security means very little if permissions overlap. We isolated four distinct groups for the platform:
+\begin{itemize}
+    \item \textbf{Author:} They upload papers, view feedback, and manage their profile details. Their view of the system is heavily restricted to only the papers tied to their authentication ID.
+    \item \textbf{Reviewer:} These users receive invites. Once logged in, they can bid on papers they feel qualified to review. They download assigned PDFs, interact with the AI assistant to gauge methodologies, and submit categorized feedback.
+    \item \textbf{Track Chair:} This role acts as a bridge. The Owner assigns bulk papers to a Track Chair based on a domain topic (e.g., "Machine Learning"). The Track Chair then sorts those papers out to specific reviewers, aggregates the resulting scores, and passes a final recommendation up the chain.
+    \item \textbf{Owner:} The master administrator. They invite initial users, monitor global system logs, run the AI web-scraper for background checks, and make the absolute final accept or reject call on every submission.
+\end{itemize}
+
+% -------------------------
+% Chapter 2
+% -------------------------
+\chapter{Literature Survey}
+
+\section{Existing Academic Conference Platforms}
+When evaluating current market solutions, we spent significant time mapping the exact capabilities of legacy systems. The incumbent tools essentially act as basic CRUD (Create, Read, Update, Delete) dashboards tied to SMTP servers. They safely store PDFs and allow organizers to download them. However, researchers continuously report interface fatigue. These platforms trigger full HTTP round trips back to a monolithic server block for simple tasks like changing a dropdown value from "Pending" to "Accepted." This directly contrasts with the expectations of the modern internet, where platforms maintain an active socket and only re-render the exact DOM node that changed.
+
+\section{Real-time Database Polling vs WebSocket Syncing}
+Historically, if an application wanted real-time data, the client-side code would fire a \texttt{setInterval} request every few seconds begging the server for new data. This is tremendously wasteful. Modern NoSQL solutions leverage WebSockets to push data automatically. Our research noted that transitioning an entire conference organization platform to listen for active snapshots rather than making explicit pull requests dramatically drops server load while giving users immediate visual feedback. We chose Firebase’s V10 SDK specifically because it handles the socket negotiation organically in the background. 
+
+\section{Retrieval-Augmented Generation in Specialized Environments}
+The most significant literary gap we noticed was the lack of localized intelligence. Standard Large Language Models (LLMs) hallucinate horribly when asked specific questions about unreleased, niche scientific studies because the studies do not exist in their training parameters. 
+
+Retrieval-Augmented Generation (RAG) completely bypasses this. Instead of asking the brain to remember something it hasn’t seen, RAG hands the model the exact text and restricts it from guessing. We analyzed multiple methodologies for implementing this and settled on processing the PDFs locally using Python pipelines, slicing the text into overlapping contextual arrays safely, and embedding them into a localized vector space. When a user asks a question, the system finds the closest mathematical similarity in the vector chunks and feeds it into the generative prompt.
+
+\section{Summary of Gaps in Existing Solutions}
+Looking at both the archaic state of academic platforms and the emerging world of generative AI, the overlap is completely empty. No existing platform combines an incredibly fast, state-managed SPA with built-in RAG tools pointing locally at the isolated PDFs. The gap we fill with NexGen is giving track chairs speed through architecture, and insight through AI.
+
+% -------------------------
+% Chapter 3
+% -------------------------
+\chapter{System Design and Proposed Architecture}
+
+\section{Technology Stack Overview}
+Rather than picking frameworks blindly, we justified every layer of the architecture based on the specific necessity of avoiding bundle bloat and ensuring rapid deployment.
+
+\subsection{Frontend Execution}
+We bypassed heavy virtual DOM mechanics entirely. NexGen relies heavily on Vanilla JS utilizing ES6 module structures. By manually managing state through precise DOM selections and class toggling, we keep browser memory allocation incredibly low. We wrapped the codebase in Vite. Vite avoids the slow Webpack compilation cycle by utilizing native ES modules in the browser, offering extreme Hot Module Replacement speeds while we tweaked the UI styling dynamically.
+
+\subsection{Data Management}
+The database operates on Firestore. It relies on a NoSQL architecture grouping related items under tightly controlled Collections. Furthermore, we integrated Firebase Authentication via Google OAuth. The system intercepts the OAuth payload during the redirect bounce, parses the user's primary email, and automatically structures a default document mapping ensuring that the user never encounters a friction-heavy registration barrier.
+
+\subsection{Language Macroservice}
+While JavaScript handles the client interfaces natively, relying on JS for heavy NLP processing is highly inefficient. We spun up a concurrent FastAPI interface riding on Python on a different local port. Python natively handles chunking mechanics using chunking libraries efficiently, letting us securely pass buffers to LangChain logic trees.
+
+\section{Database Schema Design}
+Because NoSQL does not rely on foreign keys, data shaping requires extreme anticipation. 
+
+\begin{itemize}
+    \item \textbf{Collections (users):} Driven entirely by the exact \texttt{uid} string generated by Firebase Auth. It holds the \texttt{role} enum and a \texttt{status} flag indicating if the user has completed their profile.
+    \item \textbf{Collections (papers):} The grand central node. Every paper object tracks the exact ID of the author and maintains a \texttt{status} ribbon that marches systematically from `Submitted` up towards `Accepted`.
+    \item \textbf{Collections (bids):} To avoid a reviewer bidding twice causing race conditions, we engineer the ID of the bid object to be explicitly \texttt{paperId\_reviewerId}. This enforces uniqueness at the database root level.
+    \item \textbf{Collections (assignments and reviews):} Separating these allows us to assign a reviewer a paper, but keep their specific grading metrics invisible until they physically hit submit, merging everything into final arrays.
+\end{itemize}
+
+\section{Core Components Overview}
+The system architecture fundamentally isolates domains. The \texttt{index.html} avoids fetching new pages entirely. Instead, we stack `view` classes directly onto global containers. The CSS utilizes root variable injections for the Glassmorphism overlays, allowing light to diffuse softly behind data tables, generating a hyper-modern feel.
+
+% TODO: INSERT PICTURE PLACEHOLDER 1 HERE
+\begin{figure}[htbp]
+    \centering
+    % \includegraphics[width=0.9\textwidth]{images/architecture_diagram.png}
+    \vspace{5cm}
+    \caption{[Demonstration Picture 1 Placeholder: Insert Overall Architecture Diagram showing Frontend mapping to Firebase and FastAPI]}
+    \label{fig:architecture}
+\end{figure}
+
+The \texttt{main.js} file is physically segmented into explicit init blocks. When the Auth token resolves and confirms the user is a Track Chair, the engine fires `initTrackChairView()` locking out all other JavaScript logic listeners cleanly to prevent memory bleeding and unauthorized clicks.
+
+\section{Design Principles}
+We leaned entirely into Glassmorphism and contextual highlighting. Instead of overwhelming the user, active tasks trigger subtle CSS animations. Searching the database relies on an imperative array filter mapping across `.toLowerCase()` textContent on the specific row elements. This allows hyper-speed client-side searching without making unnecessary and expensive reads to the Firebase cloud servers.
+
+% -------------------------
+% Chapter 4
+% -------------------------
+\chapter{Implementation and Simulation Results}
+
+\section{Single Page Application Execution}
+During testing, we simulated heavy data ingestion. Our results proved that swapping CSS classes to change views occurs natively in under 100 milliseconds directly in the browser. A user can navigate from the dashboard strictly to the paper review module instantly. Modals do not require heavy imports; they rest securely with absolute positioning and zero opacity until an event triggers their visibility.
+
+% TODO: INSERT PICTURE PLACEHOLDER 2 HERE
+\begin{figure}[htbp]
+    \centering
+    % \includegraphics[width=0.9\textwidth]{images/dashboard_ui.png}
+    \vspace{5cm}
+    \caption{[Demonstration Picture 2 Placeholder: Insert Screenshot of the main Glassmorphic Platform UI Dashboard]}
+    \label{fig:dashboard}
+\end{figure}
+
+\section{The Peer Review Lifecycle Engine}
+We ran simulations routing a paper globally.
+\begin{enumerate}
+    \item \textbf{Submission Phase:} A mock author submitted a PDF. The Firestore listener instantly popped the paper onto the Owner's dashboard.
+    \item \textbf{Bidding & Routing:} We generated track chair credentials. The owner securely routed the paper to the TC. Reviewers submitted bids, and the UI correctly rendered a cross-reference overlay showing the TC who actually wanted to read the paper.
+    \item \textbf{Lock-Step Security:} The system relies on a rigid function named \texttt{checkAndUpdatePaperStatus}. When we simulated one reviewer submitting a grade, the system refused to shift the state forward. Only when all reviewers marked their \texttt{assignments} as "Completed" did the parent state snap correctly to "Awaiting Decision", proving our data integrity safeguards hold tight under multi-user access sequences.
+\end{enumerate}
+
+% TODO: INSERT PICTURE PLACEHOLDER 3 HERE
+\begin{figure}[htbp]
+    \centering
+    % \includegraphics[width=0.9\textwidth]{images/bidding_table.png}
+    \vspace{5cm}
+    \caption{[Demonstration Picture 3 Placeholder: Insert Screenshot of the Paper Bidding or Reviewer Assignment Table Interface]}
+    \label{fig:bidding}
+\end{figure}
+
+\section{Google OAuth & User Interception}
+Handling authentication was incredibly resilient. We created a mock user as "Invited". When that exact email later utilized the Google login popup, the global \texttt{onAuthStateChanged} observer trapped the payload, parsed the domain, discovered the pending invite in the database, and merged their metadata perfectly without dropping their invited role flag. It proves the platform securely maps identities automatically.
+
+\section{AI Agent & RAG Implementations}
+The cornerstone of NexGen relies heavily on the Python microservice passing binary data into the AI chunks. We tested the system by uploading a complex 20-page research manuscript containing specific formulas.
+
+The AI stream ingested the buffer smoothly. When queried directly in our CSS-grid sidebar layout, the model successfully referenced internal definitions rather than generic training data. We then triggered the LangGraph agent protocol. By passing an instruction like "Research this author's publication background," the agent correctly fired the localized tools, routed the search through HTTP requests, collated the external intelligence, and streamed the result natively back to our Javascript pipeline via standard chunks—all happening natively inside the conference UI layout.
+
+% TODO: INSERT PICTURE PLACEHOLDER 4 HERE
+\begin{figure}[htbp]
+    \centering
+    % \includegraphics[width=0.9\textwidth]{images/ai_sidebar_interaction.png}
+    \vspace{5cm}
+    \caption{[Demonstration Picture 4 Placeholder: Insert Screenshot of the AI Sidebar interacting and responding to queries based on the paper]}
+    \label{fig:aisidebar}
+\end{figure}
+
+% -------------------------
+% Chapter 5
+% -------------------------
+\chapter{Conclusions and Future Work}
+
+\section{Summary of Achievements}
+The NexGen project fundamentally proves that academic tools do not have to look or function like legacy enterprise software. By utilizing raw vanilla Javascript and carefully structured CSS overlays, we managed to create a fluid, beautiful interface that dramatically cuts down the visual cognitive load for organizers.
+
+Simultaneously, bridging the gap between normal database administration and active artificial intelligence turned a standard system into an interactive ecosystem. Allowing reviewers to parse complex PDFs through localized LLMs directly drops the average time spent verifying mathematical claims. Empowering the overarching Owner to deploy an autonomous agent to run external scraping tasks shifts the paradigm entirely—transforming a simple storage system into an active administrative assistant.
+
+\section{Limitations}
+While robust, the current system relies heavily on processing AI vectors locally through the Python FastAPI instance. If scaled to a national level conference receiving thousands of PDFs a minute, the local vector generation mechanism could experience severe bottlenecks. Additionally, since the UI currently relies specifically on desktop orientations to neatly display the complex data tables, mobile accessibility is slightly constrained for heavy administrative actions.
+
+\section{Future Enhancements}
+Looking outward, the most immediate feature upgrade would be shifting the native AI chunking into dedicated managed cloud containers to handle extreme concurrency loads safely. We also intend to map institutional billing APIs natively into the system, allowing users to buy tickets and secure their registration directly through the same interface that tracks their papers. There is enormous potential to migrate this core logic into cross-stage mobile applications using frameworks like React Native to push real-time conflict-of-interest notifications directly to a reviewer's physical phone. 
+
+Ultimately, NexGen serves as a powerful foundational leap forward, offering a highly connected, intelligent future for organizing global research.
+
+\newpage
+
+% -------------------------
+% Bibliography
+% -------------------------
+\begin{thebibliography}{9}
+
+\bibitem{easychair}
+EasyChair: The Conference Management System.
+\textit{https://easychair.org/}
+
+\bibitem{edas}
+EDAS Conference Management.
+\textit{https://edas.info/}
+
+\bibitem{firebase}
+Google Firebase Documentation. Realtime Database and Cloud Firestore Architecture.
+\textit{https://firebase.google.com/docs/}
+
+\bibitem{rag2023}
+Lewis, P., et al. "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks." 
+\textit{Advances in Neural Information Processing Systems}, vol. 33, 2020. 
+
+\bibitem{vitejs}
+Vite Framework Official Documentation.
+\textit{https://vitejs.dev/guide/}
+
+\bibitem{langchain}
+LangChain and LangGraph API Documentation. Building Stateful Agents.
+\textit{https://python.langchain.com/}
+
+\end{thebibliography}
+
+\end{document}

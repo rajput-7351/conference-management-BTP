@@ -1,0 +1,15 @@
+# Render deployment configuration
+# Render will auto-detect this file when you connect your GitHub repo
+
+services:
+  - type: web
+    name: nexgen-ai-backend
+    env: python
+    region: singapore   # Closest free region to India
+    plan: free
+    rootDir: ai-backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false      # You will enter this manually in Render dashboard

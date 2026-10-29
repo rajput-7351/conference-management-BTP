@@ -1,6 +1,13 @@
 # Dependencies
 /node_modules
 
+# Python virtual environment (ai-backend)
+ai-backend/venv/
+ai-backend/__pycache__/
+ai-backend/**/__pycache__/
+ai-backend/agent_outputs/
+
+
 # Build output
 /dist
 

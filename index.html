@@ -3,186 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conference Management Tool</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .view {
-            display: none;
-        }
-        .view.active {
-            display: block;
-        }
-        /* Simple transition for view switching */
-        .view {
-            transition: opacity 0.3s ease-in-out;
-        }
-        .view:not(.active) {
-            opacity: 0;
-            pointer-events: none;
-        }
-        .view.active {
-            opacity: 1;
-        }
-
-        /* --- Tab Styles --- */
-        .role-section.hidden {
-            display: none;
-        }
-        .role-section {
-            display: block;
-        }
-        .nav-tab.active {
-            border-bottom-color: #4f46e5; /* indigo-600 */
-            color: #4f46e5;
-        }
-    </style>
+    <title>NexGen Conference Management</title>
+    <!-- Custom Modern CSS (No Tailwind) -->
+    <link rel="stylesheet" href="./style.css">
+    <!-- Marked.js for Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body>
 
     <!-- Main Container -->
-    <div id="app-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div id="app-container">
 
         <!-- Header / Navigation -->
-        <header class="bg-white shadow-md rounded-lg p-4 mb-8">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Conference Portal</h1>
-                    <p id="user-role-display" class="text-sm text-gray-500"></p>
-                </div>
-                <div id="auth-links" class="flex items-center space-x-4">
-                     <!-- User's email is now a clickable button -->
-                     <button id="user-email-display-btn" class="text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors">
-                        <span id="user-email-display"></span>
-                     </button>
-                     <button id="logout-btn" class="hidden bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out">Logout</button>
-                </div>
+        <header class="glass-panel top-nav">
+            <div class="nav-brand">
+                <h1>NexGen Conf</h1>
+                <p id="user-role-display"></p>
             </div>
-            <!-- Role-Specific Navigation Bar -->
-            <nav id="role-navigation" class="mt-4 border-t border-gray-200 pt-2 flex space-x-4 overflow-x-auto"></nav>
+            <div id="auth-links" class="nav-actions">
+                 <button id="user-email-display-btn" class="btn-text">
+                    <span id="user-email-display"></span>
+                 </button>
+                 <button id="logout-btn" class="btn btn-danger" style="display:none;">Logout</button>
+            </div>
         </header>
 
+        <!-- Role-Specific Navigation Bar -->
+        <nav id="role-navigation"></nav>
+
         <!-- Dynamic Content Area -->
-        <main id="main-content">
+        <main id="main-content" style="display:flex; flex-direction:column; flex:1;">
 
             <!-- Auth View -->
             <div id="auth-view" class="view active">
-                <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
-                    <h2 class="text-2xl font-bold text-center mb-6">Login or Sign Up</h2>
+                <div class="glass-panel auth-card">
+                    <h2 style="font-size: 1.5rem; margin-bottom: 2rem; color: var(--primary); text-align: center;">Welcome Back</h2>
                     <!-- Auth Form -->
-                    <form id="auth-form" class="space-y-4">
-                        <input type="email" id="email" placeholder="Email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-                        <input type="password" id="password" placeholder="Password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-                        <div id="role-selection" class="hidden">
-                            <label for="role" class="block text-sm font-medium text-gray-700">Select your role:</label>
-                            <select id="role" class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <form id="auth-form">
+                        <div class="form-group">
+                            <input type="email" id="email" placeholder="Email Address" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="password" placeholder="Password" required>
+                        </div>
+                        <div id="role-selection" class="form-group" style="display:none;">
+                            <label for="role">Select your role:</label>
+                            <select id="role">
                                 <option value="Author">Author</option>
-                                <!-- Other roles are assigned by Owner -->
                             </select>
                         </div>
-                        <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
-                            <button type="button" id="login-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out">Login</button>
-                            <button type="button" id="signup-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out">Sign Up</button>
+                        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                            <button type="button" id="login-btn" class="btn btn-primary" style="flex:1;">Login</button>
+                            <button type="button" id="signup-btn" class="btn btn-secondary" style="flex:1;">Create Account</button>
                         </div>
-                         <p id="auth-error" class="text-red-500 text-sm mt-2 text-center"></p>
+                        <div style="margin-top: 1rem; position: relative; text-align: center;">
+                            <hr style="border-top: 1px solid rgba(0,0,0,0.1); margin: 0;">
+                            <span style="background: rgba(255,255,255,0.7); position: absolute; top: -10px; left: 50%; transform: translateX(-50%); padding: 0 10px; font-size: 0.8rem; color: var(--text-muted); font-weight: bold;">OR</span>
+                        </div>
+                        <button type="button" id="google-login-btn" class="btn" style="background:#fff; color:#333; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; margin-top: 1.25rem;">
+                            <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                            Continue with Google
+                        </button>
+                         <p id="auth-error" style="color: #ef4444; font-size: 0.85rem; margin-top: 1rem; text-align: center;"></p>
                     </form>
                 </div>
             </div>
 
             <!-- Loading View -->
-            <div id="loading-view" class="view text-center py-12">
-                <p class="text-lg font-semibold">Loading your dashboard...</p>
+            <div id="loading-view" class="view" style="text-align: center; padding: 4rem;">
+                <p style="font-size: 1.25rem; font-weight: 500; color: var(--primary);">Synchronizing Dashboard...</p>
             </div>
 
-
-
-
-
-
-            <!-- NEW: Welcome View (for ALL roles) -->
+            <!-- Welcome View (for ALL roles) -->
             <div id="welcome-view" class="view">
-                <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-                    <!-- 'items-stretch' ensures images and text box are the same height -->
-                    <div class="md:flex items-stretch">
-                        
-                        <!-- LEFT: Conference Chair Image -->
-                        <div class="md:w-1/4 md:flex-shrink-0 relative">
-                            <!-- 
-                               PASTE VISHNU'S IMAGE LINK HERE 
-                            -->
-                            <img class="h-64 w-full object-cover md:h-full md:absolute md:inset-0" 
-                                 src="https://i.postimg.cc/bw8dpb45/20250521-131127.jpg" 
-                                 alt="Vishnu Tomar">
-                        </div>
-                        
-                        <!-- CENTER: Text Content -->
-                        <!-- 'flex-1' makes this box grow to fill the middle space -->
-                        <div class="p-8 md:flex-1 flex flex-col justify-center bg-gray-50">
-                            <div class="text-sm font-semibold text-indigo-600 uppercase tracking-wide">
-                                A Letter from the Conference Chair and Professor
-                            </div>
-                            <h1 class="block mt-2 text-2xl font-bold text-gray-900">
-                                VISHNU TOMAR &amp; PROF. [servesh agnihotri and vikas sharma]
-                            </h1>
-                            <p class="mt-4 text-gray-600">
-                                Welcome to our new conference management platform. This tool was built under guidance of prof. servesh agnihotri. Read our chair's letter to learn more about our mission
-                            </p>
-                            <div class="mt-6">
-                                <button id="read-letter-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">
-                                    Read Vishnu's Letter
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- RIGHT: Professor Image -->
-                        <div class="md:w-1/4 md:flex-shrink-0 relative">
-                            <!-- 
-                               PASTE PROFESSOR'S IMAGE LINK HERE 
-                            -->
-                            <img class="h-64 w-full object-cover md:h-full md:absolute md:inset-0" 
-                                 src="https://i.postimg.cc/k40mMm3Z/servesh-sir.png" 
-                                 alt="Professor">
-                        </div>
-
+                <div class="glass-panel" style="display: flex; overflow: hidden;">
+                    <div style="flex: 1; min-height: 300px;">
+                        <img src="https://i.postimg.cc/bw8dpb45/20250521-131127.jpg" alt="Conference Chair" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div style="flex: 2; padding: 3rem; display: flex; flex-direction: column; justify-content: center;">
+                        <div style="color: var(--primary); font-size: 0.875rem; font-weight: 700; text-transform: uppercase;">A Letter from the Conference Chair</div>
+                        <h2 style="font-size: 2rem; margin: 1rem 0;">Vishnu Tomar & Prof. [Servesh & Vikas]</h2>
+                        <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem;">Welcome to our new highly advanced conference management platform equipped with AI RAG and Research capabilities.</p>
+                        <div><button id="read-letter-btn" class="btn btn-primary">Read Full Letter</button></div>
+                    </div>
+                    <div style="flex: 1; min-height: 300px;">
+                        <img src="https://i.postimg.cc/k40mMm3Z/servesh-sir.png" alt="Professor" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
                 </div>
             </div>
-
-
-
-
-
-
-            
 
             <!-- Author View -->
             <div id="author-view" class="view">
-                 <!-- Author Sub-View: My Submissions -->
                 <div id="author-submissions-section" class="role-section">
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h3 class="text-xl font-bold mb-4">My Submissions</h3>
-                        <div id="author-papers-list" class="space-y-4"></div>
+                    <div class="glass-panel" style="padding: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="font-size: 1.25rem; margin: 0;">My Submissions</h3>
+                        </div>
+                        <input type="text" class="search-input" data-target="author-papers-list" placeholder="Search your papers..." style="margin-bottom: 1.5rem;">
+                        <div id="author-papers-list" style="display: flex; flex-direction: column;"></div>
                     </div>
                 </div>
-                 <!-- Author Sub-View: Submit Paper -->
                 <div id="author-submit-section" class="role-section hidden">
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h3 class="text-xl font-bold mb-4">Submit a New Paper</h3>
-                        <form id="submit-paper-form" class="space-y-4">
-                            <input type="text" id="paper-title" placeholder="Paper Title" class="w-full p-2 border rounded-md" required>
-                            <textarea id="paper-abstract" placeholder="Abstract" class="w-full p-2 border rounded-md" rows="4" required></textarea>
-                            <input type="text" id="paper-keywords" placeholder="Keywords (comma-separated)" class="w-full p-2 border rounded-md" required>
-                            <div>
-                                <label for="paper-link" class="block text-sm font-medium text-gray-700">Paper Link (e.g., Google Drive, Dropbox)</label>
-                                <input type="url" id="paper-link" placeholder="https://docs.google.com/document/..." class="w-full p-2 border rounded-md" required>
+                    <div class="glass-panel" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+                        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Submit a New Paper</h3>
+                        <form id="submit-paper-form">
+                            <div class="form-group"><input type="text" id="paper-title" placeholder="Paper Title" required></div>
+                            <div class="form-group"><textarea id="paper-abstract" placeholder="Abstract" rows="5" required></textarea></div>
+                            <div class="form-group"><input type="text" id="paper-keywords" placeholder="Keywords (comma-separated)" required></div>
+                            <div class="form-group">
+                                <label for="paper-link">Paper Link (Google Drive / PDF URL)</label>
+                                <input type="url" id="paper-link" placeholder="https://..." required>
                             </div>
-                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">Submit Paper</button>
+                            <button type="submit" class="btn btn-success">Submit Paper</button>
                         </form>
                     </div>
                 </div>
@@ -190,80 +122,78 @@
 
             <!-- Owner View -->
             <div id="owner-view" class="view">
-                <!-- Owner Sub-View: Dashboard -->
                 <div id="owner-dashboard-section" class="role-section">
-                    <!-- Dashboard Stats -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                            <h4 class="text-lg font-semibold text-gray-600">Total Papers</h4>
-                            <p id="owner-total-papers" class="text-3xl font-bold">0</p>
+                    <div class="stats-grid">
+                        <div class="glass-panel stat-card">
+                            <h4>Total Papers</h4>
+                            <p id="owner-total-papers">0</p>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                            <h4 class="text-lg font-semibold text-gray-600">Needs Assignment</h4>
-                            <p id="owner-needs-assignment" class="text-3xl font-bold">0</p>
+                        <div class="glass-panel stat-card">
+                            <h4>Needs Assignment</h4>
+                            <p id="owner-needs-assignment">0</p>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                            <h4 class="text-lg font-semibold text-gray-600">Under Review</h4>
-                            <p id="owner-under-review" class="text-3xl font-bold">0</p>
+                        <div class="glass-panel stat-card">
+                            <h4>Under Review</h4>
+                            <p id="owner-under-review">0</p>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                            <h4 class="text-lg font-semibold text-gray-600">Awaiting Decision</h4>
-                            <p id="owner-awaiting-decision" class="text-3xl font-bold">0</p>
+                        <div class="glass-panel stat-card">
+                            <h4>Awaiting Decision</h4>
+                            <p id="owner-awaiting-decision">0</p>
+                        </div>
+                    </div>
+                    <!-- Placeholder for Chart.js Integration -->
+                    <div class="glass-panel" style="padding: 2rem;">
+                        <h3 style="margin-bottom: 1.5rem;">Submission Analytics</h3>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="dashboard-chart"></canvas>
                         </div>
                     </div>
                 </div>
-                <!-- Owner Sub-View: Paper Management -->
                 <div id="owner-papers-section" class="role-section hidden">
-                    <!-- All Papers -->
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-bold">All Submitted Papers</h3>
-                            <button id="export-csv-btn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm">
-                                Export to CSV
-                            </button>
+                    <div class="glass-panel" style="padding: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3>All Submitted Papers</h3>
+                            <button id="export-csv-btn" class="btn btn-success">Export to CSV</button>
                         </div>
-                        <div id="owner-papers-list" class="space-y-4"></div>
+                        <input type="text" class="search-input" data-target="owner-papers-list" placeholder="Search papers by title, author email, or attributes..." style="margin-bottom: 1.5rem;">
+                        <div id="owner-papers-list"></div>
                     </div>
                 </div>
-                <!-- Owner Sub-View: User Management -->
                 <div id="owner-users-section" class="role-section hidden">
-                    <!-- User Management -->
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h3 class="text-xl font-bold mb-4">Manage Users</h3>
-                        <form id="add-user-form" class="flex flex-col sm:flex-row items-end space-y-2 sm:space-y-0 sm:space-x-4 mb-6">
-                            <div class="w-full">
-                                <label for="new-user-email" class="text-sm">User Email</label>
-                                <input type="email" id="new-user-email" placeholder="Email to invite" class="w-full p-2 border rounded-md">
-                            </div>
-                            <div class="w-full">
-                                 <label for="new-user-role" class="text-sm">Role</label>
-                                <select id="new-user-role" class="w-full p-2 border rounded-md">
-                                    <option value="TrackChair">Track Chair</option>
-                                    <option value="Reviewer">Reviewer</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Add User</button>
+                    <div class="glass-panel" style="padding: 2rem;">
+                        <h3 style="margin-bottom: 1.5rem;">Manage Users</h3>
+                        <form id="add-user-form" style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                            <input type="email" id="new-user-email" placeholder="Email to invite" style="flex:1;">
+                            <select id="new-user-role" style="flex: 1;">
+                                <option value="TrackChair">Track Chair</option>
+                                <option value="Reviewer">Reviewer</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Invite User</button>
                         </form>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                             <div>
-                                <h4 class="font-semibold mb-2">Track Chairs</h4>
-                                <ul id="track-chairs-list" class="list-disc list-inside bg-gray-50 p-3 rounded"></ul>
+                                <h4 style="margin-bottom: 1rem;">Track Chairs</h4>
+                                <input type="text" class="search-input" data-target="track-chairs-list" placeholder="Search track chairs... " style="margin-bottom: 1rem; font-size: 0.85rem; padding: 0.5rem;">
+                                <div id="track-chairs-list" style="display: flex; flex-direction: column;"></div>
                             </div>
-                             <div>
-                                <h4 class="font-semibold mb-2">Reviewers</h4>
-                                <ul id="reviewers-list" class="list-disc list-inside bg-gray-50 p-3 rounded"></ul>
+                            <div>
+                                <h4 style="margin-bottom: 1rem;">Reviewers</h4>
+                                <input type="text" class="search-input" data-target="reviewers-list" placeholder="Search reviewers..." style="margin-bottom: 1rem; font-size: 0.85rem; padding: 0.5rem;">
+                                <div id="reviewers-list" style="display: flex; flex-direction: column;"></div>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
 
             <!-- Track Chair View -->
             <div id="track-chair-view" class="view">
                 <div id="trackchair-papers-section" class="role-section">
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h3 class="text-xl font-bold mb-4">My Assigned Papers</h3>
-                        <div id="track-chair-papers-list" class="space-y-4"></div>
+                    <div class="glass-panel" style="padding: 2rem;">
+                        <h3 style="margin-bottom: 1rem;">My Assigned Papers</h3>
+                        <input type="text" class="search-input" data-target="track-chair-papers-list" placeholder="Search assignments..." style="margin-bottom: 1.5rem;">
+                        <div id="track-chair-papers-list"></div>
                     </div>
                 </div>
             </div>
@@ -271,101 +201,157 @@
             <!-- Reviewer View -->
             <div id="reviewer-view" class="view">
                 <div id="reviewer-papers-section" class="role-section">
-                     <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h3 class="text-xl font-bold mb-4">Papers to Review</h3>
-                        <div id="reviewer-papers-list" class="space-y-4"></div>
+                     <div class="glass-panel" style="padding: 2rem;">
+                        <h3 style="margin-bottom: 1rem;">My Review Assignments</h3>
+                        <input type="text" class="search-input" data-target="reviewer-papers-list" placeholder="Search assigned papers..." style="margin-bottom: 1.5rem;">
+                        <div id="reviewer-papers-list"></div>
+                    </div>
+                </div>
+                <!-- NEW REVIEWER BIDDING SECTION -->
+                <div id="reviewer-bidding-section" class="role-section hidden">
+                     <div class="glass-panel" style="padding: 2rem;">
+                        <h3 style="margin-bottom: 0.5rem;">Paper Bidding</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Express your preference to review the following submitted papers. Track Chairs will see your bids during assignment.</p>
+                        <input type="text" class="search-input" data-target="reviewer-bidding-list" placeholder="Search papers to bid on..." style="margin-bottom: 1.5rem;">
+                        <div id="reviewer-bidding-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Agent Hub View -->
+            <div id="ai-hub-view" class="view" style="padding: 2rem;">
+                <div class="glass-panel" style="padding: 2.5rem; max-width: 1100px; margin: 0 auto; min-height: 75vh; display: flex; flex-direction: column;">
+                    <h2 style="margin-bottom: 0.5rem; font-size: 1.75rem; background: linear-gradient(90deg, #bb86fc, #3b82f6); -webkit-background-clip: text; color: transparent;">Autonomous Research Agent Hub</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 2rem;">Deploy an autonomous agent to research authors or topics online to detect fraud/plagiarism and fetch latest data.</p>
+                    
+                    <textarea id="ai-research-prompt" placeholder="E.g., Research recent papers by John Doe on Quantum Computing..." style="width: 100%; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1.5rem; font-size: 1rem; resize: vertical;" rows="3"></textarea>
+                    
+                    <button id="btn-run-research" class="btn btn-primary" style="width: 100%; margin-bottom: 2.5rem; background: linear-gradient(90deg, #bb86fc, #3b82f6); border: none; font-weight: bold; font-size: 1.1rem; padding: 1rem; border-radius: 12px;">Deploy AI Agent 🚀</button>
+                    
+                    <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Live Agent Terminal Output</h3>
+                    <div id="research-output-terminal" style="flex: 1; border-radius: 12px; overflow-y: auto; padding: 1.5rem; font-family: monospace; font-size: 0.95rem; background: #0f172a; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column;">
+                        <div style="color: #64748b; margin-bottom: 8px;">> System Ready. Agent standing by on Secure Server...</div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button id="download-research-btn" class="btn btn-secondary" style="padding: 0.75rem 2rem; border-radius: 8px; border-color: #3b82f6; color: #3b82f6; font-weight: bold; display: none;"><span style="margin-right: 0.5rem;">⬇</span> Download Final Report</button>
                     </div>
                 </div>
             </div>
 
         </main>
 
-        <!-- Modals -->
 
-        <!-- Full Letter Modal -->
-        <div id="letter-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div class="relative top-10 mx-auto p-8 border w-full max-w-3xl shadow-lg rounded-md bg-white">
-                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold">A Letter from the Conference Chair</h3>
-                    <button id="close-letter-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+
+        <!-- Existing MODALS (Refactored to Custom CSS) -->
+        <!-- Letter Modal -->
+        <div id="letter-modal" class="modal-overlay">
+            <div class="modal-content">
+                 <div class="modal-header">
+                    <h3>A Letter from the Conference Chair</h3>
+                    <button id="close-letter-modal-btn" class="btn-text" style="font-size: 1.5rem;">&times;</button>
                  </div>
-                 <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-4 text-gray-700">
+                 <div style="color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 1rem;">
                     <p>To all our esteemed colleagues, authors, and reviewers,</p>
                     <p>Welcome to the official platform for our academic conference. I am Vishnu Tomar, the Conference Chair, and it is my distinct honor to introduce this tool.</p>
-                    <p>This conference management tool was designed from the ground up to solve a simple problem: to make the process of submitting, reviewing, and publishing academic work as seamless and efficient as possible. We wanted to move beyond clunky email chains and spreadsheets and create a single, transparent, real-time environment for everyone.</p>
+                    <p>This conference management tool was designed from the ground up to make the process of submitting, reviewing, and publishing academic work seamless.</p>
                     <p>This ambitious project was made possible under guidance of prof. Servesh Agnihotri and prof. vikas sharma. We are incredibly grateful for their support.</p>
-                    <p>Whether you are an author submitting your latest research, a reviewer lending your expertise, or a track chair managing the process, this tool was built for you. We are excited to see the incredible work that will be shared through this platform.</p>
-                    <p>Sincerely,</p>
-                    <p class="font-semibold">Vishnu Tomar<br>Conference Chair</p>
+                    <p>Sincerely,<br><b>Vishnu Tomar</b><br>Conference Chair</p>
                  </div>
             </div>
         </div>
 
-        <!-- My Profile Modal -->
-        <div id="profile-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold">My Profile</h3>
-                    <button id="close-profile-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+        <!-- Recommendation Modal -->
+        <div id="recommendation-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Track Chair Recommendation</h3>
                 </div>
-                <form id="profile-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium">Email</label>
-                        <input type="email" id="profile-email" class="w-full p-2 border rounded-md bg-gray-100" disabled>
+                <p id="recommendation-modal-paper-title" style="margin-bottom: 1rem; color: var(--text-muted); font-size:0.9rem;"></p>
+                <form id="recommendation-form">
+                    <input type="hidden" id="recommendation-modal-paper-id">
+                    <div class="form-group">
+                        <label>Recommendation</label>
+                        <select id="trackchair-recommendation" required>
+                            <option value="">Select a recommendation</option>
+                            <option value="Accept">Accept</option>
+                            <option value="Minor Revisions">Minor Revisions</option>
+                            <option value="Major Revisions">Major Revisions</option>
+                            <option value="Reject">Reject</option>
+                        </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium">Role</label>
-                        <input type="text" id="profile-role" class="w-full p-2 border rounded-md bg-gray-100" disabled>
+                    <div class="form-group">
+                        <label>Track Chair Comments</label>
+                        <textarea id="trackchair-comment" rows="4" required></textarea>
                     </div>
-                    <!-- This section is only for Reviewers -->
-                    <div id="expertise-section" class="hidden">
-                        <label for="profile-expertise" class="block text-sm font-medium">Areas of Expertise (comma-separated)</label>
-                        <textarea id="profile-expertise" rows="3" class="w-full p-2 border rounded-md" placeholder="e.g., AI, Machine Learning, Database Systems"></textarea>
-                    </div>
-                    <div class="flex justify-between items-center pt-4">
-                        <button type="button" id="change-password-btn" class="text-sm text-indigo-600 hover:underline">Send Password Reset Email</button>
-                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Save Profile</button>
+                    <div style="display:flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button type="button" id="cancel-recommendation-btn" class="btn btn-secondary" style="flex:1;">Cancel</button>
+                        <button type="submit" class="btn btn-success" style="flex:1;">Submit</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Assigning Reviewers Modal -->
-        <div id="assign-reviewer-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
-                <div class="mt-3 text-center">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Assign Reviewers</h3>
-                    <div class="mt-2 px-7 py-3">
-                        <p class="text-sm text-gray-500 mb-4" id="modal-paper-title"></p>
-                        <form id="assign-reviewer-form">
-                            <input type="hidden" id="modal-paper-id">
-                            <select id="reviewer-select" multiple class="w-full h-40 p-2 border rounded-md"></select>
-                            <p class="text-xs text-gray-500 mt-2">Hold Ctrl/Cmd to select multiple reviewers.</p>
-                        </form>
+        <!-- Profile Modal -->
+        <div id="profile-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>My Profile</h3>
+                    <button id="close-profile-modal-btn" class="btn-text" style="font-size: 1.5rem;">&times;</button>
+                </div>
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="profile-email" disabled>
                     </div>
-                    <div class="items-center px-4 py-3">
-                        <button id="confirm-assign-btn" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
-                            Assign
-                        </button>
-                        <button id="cancel-assign-btn" class="mt-2 px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                            Cancel
-                        </button>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <input type="text" id="profile-role" disabled>
                     </div>
+                    <div id="expertise-section" class="form-group hidden">
+                        <label for="profile-expertise">Areas of Expertise (comma-separated)</label>
+                        <textarea id="profile-expertise" rows="3"></textarea>
+                    </div>
+                    <div style="display:flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+                        <button type="button" id="change-password-btn" class="btn-text" style="font-size:0.875rem;">Reset Password</button>
+                        <button type="submit" class="btn btn-success">Save Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Assign Reviewer Modal -->
+        <div id="assign-reviewer-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Assign Reviewers</h3>
+                </div>
+                <p id="modal-paper-title" style="margin-bottom: 1rem; color: var(--text-muted); font-size:0.9rem;"></p>
+                <form id="assign-reviewer-form">
+                    <input type="hidden" id="modal-paper-id">
+                    <div class="form-group">
+                        <select id="reviewer-select" multiple style="height: 150px;"></select>
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.5rem;">Hold Ctrl/Cmd to select multiple reviewers.</p>
+                </form>
+                <div style="display:flex; gap: 1rem;">
+                    <button id="cancel-assign-btn" class="btn btn-secondary" style="flex:1;">Cancel</button>
+                    <button id="confirm-assign-btn" class="btn btn-success" style="flex:1;">Assign</button>
                 </div>
             </div>
         </div>
 
-        <!-- Submitting Review Modal -->
-        <div id="submit-review-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-                 <h3 class="text-xl font-bold mb-4">Submit Your Review</h3>
-                 <p class="text-sm text-gray-500 mb-4" id="review-modal-paper-title"></p>
-                 <form id="submit-review-form" class="space-y-4">
+        <!-- Submit Review Modal -->
+        <div id="submit-review-modal" class="modal-overlay">
+            <div class="modal-content text-left">
+                 <div class="modal-header"><h3>Submit Your Review</h3></div>
+                 <p id="review-modal-paper-title" style="margin-bottom: 1.5rem; color: var(--text-muted);"></p>
+                 <form id="submit-review-form">
                      <input type="hidden" id="review-modal-paper-id">
                      <input type="hidden" id="review-modal-assignment-id">
-                     <div>
-                         <label class="block text-sm font-medium">Recommendation</label>
-                         <select id="review-recommendation" class="w-full p-2 border rounded-md" required>
+                     <div class="form-group">
+                         <label>Recommendation</label>
+                         <select id="review-recommendation" required>
                             <option value="">Select a recommendation</option>
                             <option value="Accept">Accept</option>
                             <option value="Minor Revisions">Minor Revisions</option>
@@ -373,70 +359,94 @@
                             <option value="Reject">Reject</option>
                          </select>
                      </div>
-                     <div>
-                         <label class="block text-sm font-medium">Comments for Author</label>
-                         <textarea id="review-comments-author" rows="5" class="w-full p-2 border rounded-md" required></textarea>
+                     <div class="form-group">
+                         <label>Comments for Author</label>
+                         <textarea id="review-comments-author" rows="4" required></textarea>
                      </div>
-                      <div>
-                         <label class="block text-sm font-medium">Confidential Comments for Chair</label>
-                         <textarea id="review-comments-confidential" rows="3" class="w-full p-2 border rounded-md"></textarea>
+                      <div class="form-group">
+                         <label>Confidential Comments for Chair</label>
+                         <textarea id="review-comments-confidential" rows="2"></textarea>
                      </div>
-                     <div class="flex justify-end space-x-4">
-                        <button type="button" id="cancel-review-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md">Cancel</button>
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md">Submit Review</button>
+                     <div style="display:flex; gap:1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button type="button" id="cancel-review-btn" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
                      </div>
                  </form>
             </div>
         </div>
 
-        <!-- Viewing Reviews Modal -->
-        <div id="view-reviews-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div class="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
-                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold">Reviews & Feedback</h3>
-                    <button id="close-reviews-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+        <!-- View Reviews Modal -->
+        <div id="view-reviews-modal" class="modal-overlay">
+            <div class="modal-content">
+                 <div class="modal-header">
+                    <h3>Reviews & Feedback</h3>
+                    <button id="close-reviews-modal-btn" class="btn-text" style="font-size: 1.5rem;">&times;</button>
                  </div>
-                 <h4 class="text-lg font-semibold mb-2" id="reviews-modal-paper-title"></h4>
-                 <div id="reviews-modal-content" class="space-y-4 max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-md">
-                    <!-- Review content will be injected here -->
+                 <h4 id="reviews-modal-paper-title" style="margin-bottom: 1rem; color:var(--primary);"></h4>
+                 <div id="reviews-modal-content" style="display:flex; flex-direction: column; gap:1rem;">
                  </div>
             </div>
         </div>
         
-        <!-- Track Chair Recommendation Modal -->
-        <div id="recommendation-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
-                 <h3 class="text-xl font-bold mb-4">Submit Recommendation</h3>
-                 <p class="text-sm text-gray-500 mb-4" id="recommendation-modal-paper-title"></p>
-                 <form id="recommendation-form" class="space-y-4">
-                     <input type="hidden" id="recommendation-modal-paper-id">
-                     <div>
-                         <label for="trackchair-recommendation" class="block text-sm font-medium">Final Recommendation</label>
-                         <select id="trackchair-recommendation" class="w-full p-2 border rounded-md" required>
-                            <option value="">Select a recommendation</option>
-                            <option value="Strong Accept">Strong Accept</option>
-                            <option value="Accept">Accept</option>
-                            <option value="Weak Accept">Weak Accept</option>
-                            <option value="Borderline">Borderline</option>
-                            <option value="Weak Reject">Weak Reject</option>
-                            <option value="Reject">Reject</option>
-                         </select>
-                     </div>
-                     <div>
-                         <label for="trackchair-comment" class="block text-sm font-medium">Comments for Author</label>
-                         <textarea id="trackchair-comment" rows="5" class="w-full p-2 border rounded-md" placeholder="Provide a summary of the reviews and your final comments for the author."></textarea>
-                     </div>
-                     <div class="flex justify-end space-x-4">
-                        <button type="button" id="cancel-recommendation-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md">Cancel</button>
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md">Submit to Owner</button>
-                     </div>
-                 </form>
-            </div>
-        </div>
-
     </div>
 
-    <!-- All JavaScript is now in main.js -->
+    <!-- AI Integration Sidebar -->
+    <button id="floating-ai-btn" class="ai-toggle-btn" style="display: none;" title="Open AI Assistant">✨</button>
+    
+    <div id="ai-sidebar" class="ai-sidebar glass-panel" style="padding: 1.5rem; display: flex; flex-direction: column;">
+        <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+            <h3 style="margin: 0; font-weight: bold; background: linear-gradient(90deg, #bb86fc, #3b82f6); -webkit-background-clip: text; color: transparent;">NexGen AI Hub</h3>
+            <button id="close-sidebar-btn" class="btn btn-secondary" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: white;">&times;</button>
+        </div>
+        
+        <div id="rag-tab" style="flex: 1; display: flex; flex-direction: column;">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Upload a paper PDF to chat about its contents, extract flaws, or ask questions.</p>
+            <input type="file" id="file-rag-upload" accept="application/pdf" style="margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border); width: 100%;">
+            <button id="btn-upload-rag" class="btn btn-primary" style="width: 100%; margin-bottom: 1.5rem;">Process PDF Database</button>
+            
+            <div id="rag-chat-history" class="glass-panel" style="flex: 1; min-height: 250px; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;"></div>
+            
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="rag-chat-input" placeholder="Ask about the paper..." style="flex: 1; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border);">
+                <button id="btn-send-rag" class="btn btn-success" style="padding: 0.75rem 1rem;">Send</button>
+            </div>
+            
+            <!-- Actions -->
+            <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                <button id="download-rag-chat-btn" class="btn btn-secondary" style="flex:1; border-radius: 8px; border-color: #3b82f6; color: #3b82f6;">⬇ Download</button>
+                <button id="cancel-sidebar-btn" class="btn btn-secondary" style="flex:1; border-radius: 8px; color: #EF4444; border-color: #EF4444; background: rgba(239, 68, 68, 0.05);">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
     <script type="module" src="/main.js"></script>
+
+    <!-- UI Interaction Scripts (Modals mapping, Sidebar logic) -->
+    <script>
+        // Local logic for simple UI components not tied to Firebase
+        document.getElementById('letter-modal') && document.getElementById('read-letter-btn').addEventListener('click', () => {
+            document.getElementById('letter-modal').classList.add('active');
+        });
+        document.getElementById('close-letter-modal-btn') && document.getElementById('close-letter-modal-btn').addEventListener('click', () => {
+            document.getElementById('letter-modal').classList.remove('active');
+        });
+
+        // AI Sidebar Toggle Logic
+        const aiSidebar = document.getElementById('ai-sidebar');
+        const floatingBtn = document.getElementById('floating-ai-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const cancelSidebarBtn = document.getElementById('cancel-sidebar-btn');
+        
+        if (floatingBtn && aiSidebar) {
+            floatingBtn.addEventListener('click', () => aiSidebar.classList.add('open'));
+            closeSidebarBtn.addEventListener('click', () => aiSidebar.classList.remove('open'));
+            if(cancelSidebarBtn) {
+                cancelSidebarBtn.addEventListener('click', () => aiSidebar.classList.remove('open'));
+            }
+        }
+    </script>
+    <script src="/ai-integration.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
