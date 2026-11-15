@@ -1,8 +1,7 @@
 import fitz
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_chroma import Chroma
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
@@ -11,6 +10,7 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from config import (GEMINI_API_KEY, EMBEDDING_MODEL, GEMINI_MODEL,
                     CHUNK_SIZE, CHUNK_OVERLAP, MAX_RETRIVED_DOCS)
+
 # In-memory session store
 store = {}
 
@@ -50,9 +50,14 @@ def split_text_into_chunks(text):
 
 
 def build_vector_store(chunks):
-    """Embed text chunks and store them in a FAISS vector store."""
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-    vector_store = FAISS.from_texts(chunks, embedding=embeddings)
+    """Embed text chunks using Google Gemini embeddings and store in ChromaDB."""
+    # GoogleGenerativeAIEmbeddings calls the Gemini API — no local model download
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model=EMBEDDING_MODEL,
+        google_api_key=GEMINI_API_KEY,
+    )
+    # Use in-memory Chroma (no disk persistence needed for serverless)
+    vector_store = Chroma.from_texts(chunks, embedding=embeddings)
     return vector_store
 
 
@@ -75,7 +80,7 @@ def build_rag_chain(vector_store):
         ("human", "{input}"),
     ])
 
-    # LCEL pipeline fallback
+    # LCEL pipeline
     retriever = vector_store.as_retriever(
         search_kwargs={"k": MAX_RETRIVED_DOCS}
     )
@@ -90,8 +95,8 @@ def build_rag_chain(vector_store):
         )
         | RunnablePassthrough.assign(
             answer=(lambda x: {
-                "context": get_context_str(x), 
-                "chat_history": x.get("chat_history", []), 
+                "context": get_context_str(x),
+                "chat_history": x.get("chat_history", []),
                 "input": x["input"]
             }) | prompt | llm | StrOutputParser()
         )

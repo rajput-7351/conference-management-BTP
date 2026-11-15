@@ -2,7 +2,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from langchain_core.tools import tool
-from ddgs import DDGS
+from duckduckgo_search import DDGS
 from config import OUTPUT_DIR, MAX_SEARCH_RESULTS, MAX_SCRAPE_CHARS
 
 
