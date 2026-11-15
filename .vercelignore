@@ -1,19 +1,42 @@
-# Vercel should only deploy the frontend — ignore everything else
+# ============================================
+# VERCEL IGNORE — Frontend deployment only
+# Vercel should ONLY bundle HTML/JS/CSS assets
+# ============================================
 
-# Python backend (entire folder — deployed separately on Render)
+# Python AI Backend (deployed separately on Render)
 ai-backend/
-
-# Python artifacts
+*.py
 *.pyc
 __pycache__/
-*.py
 
-# Large unnecessary files
+# Python virtual environments (HUGE — never deploy)
+venv/
+env/
+.venv/
+**/venv/
+**/env/
+**/.venv/
+
+# Node dependencies (Vercel installs fresh)
+node_modules/
+
+# Vite build output (Vercel builds fresh from source)
+dist/
+
+# Large binary/data files not needed for frontend
 btp sample report/
 screenshot and chat data/
 report.tex
-PROJECT_DOCUMENTATION.md
-render.yaml
+*.pdf
+*.tex
+*.csv
 
-# Dev dependencies (Vercel installs fresh from package.json)
-node_modules/
+# Config files for other services
+render.yaml
+PROJECT_DOCUMENTATION.md
+README.md
+
+# OS and editor artifacts
+.DS_Store
+Thumbs.db
+*.log
