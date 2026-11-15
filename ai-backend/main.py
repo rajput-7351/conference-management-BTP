@@ -40,9 +40,9 @@ class QueryRequest(BaseModel):
     query: str
     session_id: str = "default"
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def root():
-    """Health check endpoint."""
+    """Health check endpoint — supports GET and HEAD (for Render's health checker)."""
     return {"status": "NexGen AI Backend is running", "agent_ready": research_agent is not None}
 
 @app.post("/api/rag/upload")

@@ -1,4 +1,4 @@
-import fitz
+import pymupdf as fitz  # noqa: F401 — avoids FutureWarning from old fitz alias
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
