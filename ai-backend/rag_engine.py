@@ -1,7 +1,8 @@
 import pymupdf as fitz  # noqa: F401 — avoids FutureWarning from old fitz alias
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_core.embeddings import Embeddings
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
@@ -10,8 +11,36 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from config import (GEMINI_API_KEY, EMBEDDING_MODEL, GEMINI_MODEL,
                     CHUNK_SIZE, CHUNK_OVERLAP, MAX_RETRIVED_DOCS)
+import google.generativeai as palm
+from typing import List
 
-# In-memory session store
+# ── Custom Gemini Embeddings (bypasses langchain-google-genai v1beta bug) ────
+class GeminiEmbeddings(Embeddings):
+    """Calls google-generativeai SDK directly — reliable v1beta embed_content."""
+
+    def __init__(self, api_key: str, model: str = "models/embedding-001"):
+        palm.configure(api_key=api_key)
+        self.model = model
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        embeddings = []
+        for text in texts:
+            result = palm.embed_content(
+                model=self.model,
+                content=text,
+                task_type="retrieval_document"
+            )
+            embeddings.append(result["embedding"])
+        return embeddings
+
+    def embed_query(self, text: str) -> List[float]:
+        result = palm.embed_content(
+            model=self.model,
+            content=text,
+            task_type="retrieval_query"
+        )
+        return result["embedding"]
+
 store = {}
 
 
@@ -50,13 +79,8 @@ def split_text_into_chunks(text):
 
 
 def build_vector_store(chunks):
-    """Embed text chunks using Google Gemini embeddings and store in ChromaDB."""
-    # GoogleGenerativeAIEmbeddings calls the Gemini API — no local model download
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model=EMBEDDING_MODEL,
-        google_api_key=GEMINI_API_KEY,
-    )
-    # Use in-memory Chroma (no disk persistence needed for serverless)
+    """Embed text chunks using GeminiEmbeddings and store in ChromaDB."""
+    embeddings = GeminiEmbeddings(api_key=GEMINI_API_KEY, model=EMBEDDING_MODEL)
     vector_store = Chroma.from_texts(chunks, embedding=embeddings)
     return vector_store
 
