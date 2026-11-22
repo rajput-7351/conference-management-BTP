@@ -1,4 +1,5 @@
-import pymupdf as fitz  # noqa: F401 — avoids FutureWarning from old fitz alias
+import pymupdf as fitz  # noqa: F401
+import requests
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_core.embeddings import Embeddings
@@ -9,38 +10,45 @@ from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
-from config import (GEMINI_API_KEY, EMBEDDING_MODEL, GEMINI_MODEL,
+from config import (GEMINI_API_KEY, GEMINI_MODEL,
                     CHUNK_SIZE, CHUNK_OVERLAP, MAX_RETRIVED_DOCS)
-import google.generativeai as palm
 from typing import List
 
-# ── Custom Gemini Embeddings (bypasses langchain-google-genai v1beta bug) ────
+# ── Direct REST Embeddings (v1 API — bypasses all SDK version bugs) ───────────
 class GeminiEmbeddings(Embeddings):
-    """Calls google-generativeai SDK directly — reliable v1beta embed_content."""
+    """
+    Calls Google Generative Language REST API v1 directly.
+    Bypasses langchain-google-genai and google-generativeai SDK bugs
+    that route embedding calls to the wrong v1beta endpoint.
+    """
+    EMBED_URL = "https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent"
 
-    def __init__(self, api_key: str, model: str = "models/embedding-001"):
-        palm.configure(api_key=api_key)
-        self.model = model
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+
+    def _embed(self, text: str, task_type: str = "RETRIEVAL_DOCUMENT") -> List[float]:
+        response = requests.post(
+            self.EMBED_URL,
+            params={"key": self.api_key},
+            json={
+                "model": "models/text-embedding-004",
+                "content": {"parts": [{"text": text}]},
+                "taskType": task_type
+            },
+            timeout=30
+        )
+        if not response.ok:
+            raise RuntimeError(f"Embedding API error {response.status_code}: {response.text}")
+        return response.json()["embedding"]["values"]
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        embeddings = []
-        for text in texts:
-            result = palm.embed_content(
-                model=self.model,
-                content=text,
-                task_type="retrieval_document"
-            )
-            embeddings.append(result["embedding"])
-        return embeddings
+        return [self._embed(t, "RETRIEVAL_DOCUMENT") for t in texts]
 
     def embed_query(self, text: str) -> List[float]:
-        result = palm.embed_content(
-            model=self.model,
-            content=text,
-            task_type="retrieval_query"
-        )
-        return result["embedding"]
+        return self._embed(text, "RETRIEVAL_QUERY")
 
+
+# In-memory session store
 store = {}
 
 
@@ -79,8 +87,8 @@ def split_text_into_chunks(text):
 
 
 def build_vector_store(chunks):
-    """Embed text chunks using GeminiEmbeddings and store in ChromaDB."""
-    embeddings = GeminiEmbeddings(api_key=GEMINI_API_KEY, model=EMBEDDING_MODEL)
+    """Embed text chunks using direct REST Gemini embeddings and store in ChromaDB."""
+    embeddings = GeminiEmbeddings(api_key=GEMINI_API_KEY)
     vector_store = Chroma.from_texts(chunks, embedding=embeddings)
     return vector_store
 
