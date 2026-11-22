@@ -27,22 +27,20 @@ How to behave:
 
 def create_agent():
     """Create and return a LangGraph ReAct agent with memory."""
-    # Add to your ChatGoogleGenerativeAI init in agent.py
     llm = ChatGoogleGenerativeAI(
         model=GEMINI_MODEL,
         google_api_key=GEMINI_API_KEY,
         temperature=0.1,
-        convert_system_message_to_human=True,  # ← add this
     )
 
     memory = MemorySaver()
 
     agent = create_react_agent(
-    model=llm,
-    tools=TOOLS,
-    checkpointer=memory,
-    prompt=SYSTEM_PROMPT,
-)
+        model=llm,
+        tools=TOOLS,
+        checkpointer=memory,
+        messages_modifier=SYSTEM_PROMPT,  # 'prompt' was renamed to 'messages_modifier' in langgraph 0.2.x
+    )
 
     return agent
 

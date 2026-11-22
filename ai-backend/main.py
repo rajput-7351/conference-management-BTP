@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import os
+import traceback
 
 import rag_engine
 from agent import create_agent, run_agent, get_final_answer
@@ -20,7 +21,8 @@ async def lifespan(app: FastAPI):
         research_agent = create_agent()
         print("Research agent initialized successfully.")
     except Exception as e:
-        print(f"Failed to initialize research agent: {e}")
+        print(f"AGENT INIT FAILED: {e}")
+        traceback.print_exc()  # prints full stack trace to Render logs
     yield  # App runs here
     # Shutdown logic (if needed) goes below yield
     print("NexGen AI Backend shutting down.")
