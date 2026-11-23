@@ -1,59 +1,24 @@
 import pymupdf as fitz  # noqa: F401
-import requests
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_chroma import Chroma
-from langchain_core.embeddings import Embeddings
+from langchain_community.retrievers import BM25Retriever
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain.schema import Document
 from config import (GEMINI_API_KEY, GEMINI_MODEL,
                     CHUNK_SIZE, CHUNK_OVERLAP, MAX_RETRIVED_DOCS)
-from typing import List
-
-# ── Direct REST Embeddings (v1 API — bypasses all SDK version bugs) ───────────
-class GeminiEmbeddings(Embeddings):
-    """
-    Calls Google Generative Language REST API v1 directly.
-    Bypasses langchain-google-genai and google-generativeai SDK bugs
-    that route embedding calls to the wrong v1beta endpoint.
-    """
-    EMBED_URL = "https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent"
-
-    def __init__(self, api_key: str):
-        self.api_key = api_key
-
-    def _embed(self, text: str, task_type: str = "RETRIEVAL_DOCUMENT") -> List[float]:
-        response = requests.post(
-            self.EMBED_URL,
-            params={"key": self.api_key},
-            json={
-                "model": "models/text-embedding-004",
-                "content": {"parts": [{"text": text}]},
-                "taskType": task_type
-            },
-            timeout=30
-        )
-        if not response.ok:
-            raise RuntimeError(f"Embedding API error {response.status_code}: {response.text}")
-        return response.json()["embedding"]["values"]
-
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        return [self._embed(t, "RETRIEVAL_DOCUMENT") for t in texts]
-
-    def embed_query(self, text: str) -> List[float]:
-        return self._embed(text, "RETRIEVAL_QUERY")
-
 
 # In-memory session store
 store = {}
+# Global BM25 retriever (rebuilt on each PDF upload)
+_retriever = None
 
 
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
-    """Return chat history for a given session."""
     if session_id not in store:
         store[session_id] = ChatMessageHistory()
     return store[session_id]
@@ -74,7 +39,7 @@ def extract_text_from_pdf(pdf_file):
 
 
 def split_text_into_chunks(text):
-    """Split extracted text into overlapping chunks for embedding."""
+    """Split extracted text into overlapping chunks."""
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP,
@@ -86,22 +51,22 @@ def split_text_into_chunks(text):
     return chunks
 
 
-def build_vector_store(chunks):
-    """Embed text chunks using direct REST Gemini embeddings and store in ChromaDB."""
-    embeddings = GeminiEmbeddings(api_key=GEMINI_API_KEY)
-    vector_store = Chroma.from_texts(chunks, embedding=embeddings)
-    return vector_store
+def build_retriever(chunks):
+    """Build a BM25 keyword retriever — no API key or model download needed."""
+    global _retriever
+    docs = [Document(page_content=chunk) for chunk in chunks]
+    _retriever = BM25Retriever.from_documents(docs, k=MAX_RETRIVED_DOCS)
+    return _retriever
 
 
-def build_rag_chain(vector_store):
-    """Build a conversational RAG chain using Gemini and the vector store."""
+def build_rag_chain(retriever):
+    """Build a conversational RAG chain using Gemini LLM and BM25 retriever."""
     llm = ChatGoogleGenerativeAI(
         model=GEMINI_MODEL,
         google_api_key=GEMINI_API_KEY,
         temperature=0.3,
     )
 
-    # Prompt template
     prompt = ChatPromptTemplate.from_messages([
         ("system", """You are a helpful assistant that answers questions 
         based on the provided document context. If the answer is not in 
@@ -112,31 +77,23 @@ def build_rag_chain(vector_store):
         ("human", "{input}"),
     ])
 
-    # LCEL pipeline
-    retriever = vector_store.as_retriever(
-        search_kwargs={"k": MAX_RETRIVED_DOCS}
-    )
-
-    def get_context_str(inputs):
-        docs = inputs.get("context", [])
+    def retrieve_context(inputs):
+        docs = retriever.invoke(inputs["input"])
         return "\n\n".join(doc.page_content for doc in docs)
 
-    retrieval_chain = (
-        RunnablePassthrough.assign(
-            context=(lambda x: x["input"]) | retriever
-        )
+    chain = (
+        RunnablePassthrough.assign(context=RunnableLambda(retrieve_context))
         | RunnablePassthrough.assign(
             answer=(lambda x: {
-                "context": get_context_str(x),
+                "context": x["context"],
                 "chat_history": x.get("chat_history", []),
                 "input": x["input"]
             }) | prompt | llm | StrOutputParser()
         )
     )
 
-    # Wrap with message history for conversational memory
     conversational_chain = RunnableWithMessageHistory(
-        retrieval_chain,
+        chain,
         get_session_history,
         input_messages_key="input",
         history_messages_key="chat_history",
@@ -150,20 +107,19 @@ def process_pdf(pdf_file):
     """Full pipeline — PDF to RAG chain. Returns a ready-to-use chain."""
     text = extract_text_from_pdf(pdf_file)
     chunks = split_text_into_chunks(text)
-    vector_store = build_vector_store(chunks)
-    chain = build_rag_chain(vector_store)
+    retriever = build_retriever(chunks)
+    chain = build_rag_chain(retriever)
     return chain, len(chunks)
 
 
 def ask_question(chain, question, session_id="default"):
-    """Ask a question and return the answer and source chunks."""
+    """Ask a question and return the answer."""
     try:
         result = chain.invoke(
             {"input": question},
             config={"configurable": {"session_id": session_id}},
         )
         answer = result.get("answer", "No answer found.")
-        sources = result.get("context", [])
-        return answer, sources
+        return answer, []
     except Exception as e:
         raise RuntimeError(f"Failed to get answer: {e}")
