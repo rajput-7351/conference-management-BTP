@@ -31,8 +31,6 @@ def create_agent():
         model=GEMINI_MODEL,
         google_api_key=GEMINI_API_KEY,
         temperature=0.1,
-        # Force v1 API — langchain-google-genai 2.x defaults to v1beta which 404s
-        http_options={"api_version": "v1"},
     )
 
     memory = MemorySaver()

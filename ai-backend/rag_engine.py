@@ -2,17 +2,27 @@ import pymupdf as fitz  # noqa: F401
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.retrievers import BM25Retriever
 from langchain.schema import Document
-from google import genai
-from google.genai import types
+import requests
 from config import (GEMINI_API_KEY, GEMINI_MODEL,
                     CHUNK_SIZE, CHUNK_OVERLAP, MAX_RETRIVED_DOCS)
 
-# ── Google GenAI client forced to v1 API (not v1beta) ────────────────────────
-def get_genai_client():
-    return genai.Client(
-        api_key=GEMINI_API_KEY,
-        http_options=types.HttpOptions(api_version="v1")
+# ── Direct REST call to Gemini v1 API (bypasses all SDK version issues) ───────
+_GEMINI_URL = f"https://generativelanguage.googleapis.com/v1/models/{GEMINI_MODEL}:generateContent"
+
+def call_gemini(prompt: str) -> str:
+    """POST to Gemini v1 generateContent endpoint using plain requests."""
+    response = requests.post(
+        _GEMINI_URL,
+        params={"key": GEMINI_API_KEY},
+        json={
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.3, "maxOutputTokens": 1024}
+        },
+        timeout=60
     )
+    if not response.ok:
+        raise RuntimeError(f"Gemini API error {response.status_code}: {response.text}")
+    return response.json()["candidates"][0]["content"]["parts"][0]["text"]
 
 # ── In-memory chat history store ──────────────────────────────────────────────
 # { session_id: [ {"role": "user"|"assistant", "content": str}, ... ] }
@@ -100,14 +110,9 @@ User question: {question}
 
 Answer:"""
 
-    # 4. Call Gemini via google-genai SDK on v1 API (NOT v1beta)
+    # 4. Call Gemini via direct REST v1 API (no SDK, no v1beta issues)
     try:
-        client = get_genai_client()
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt
-        )
-        answer = response.text
+        answer = call_gemini(prompt)
     except Exception as e:
         raise RuntimeError(f"Gemini API call failed: {e}")
 
