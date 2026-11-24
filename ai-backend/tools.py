@@ -1,9 +1,51 @@
 import os
+import time
 import requests
 from bs4 import BeautifulSoup
 from langchain_core.tools import tool
 from duckduckgo_search import DDGS
 from config import OUTPUT_DIR, MAX_SEARCH_RESULTS, MAX_SCRAPE_CHARS
+
+
+def _ddg_search(query: str) -> list:
+    """Try DuckDuckGo search with retries."""
+    for attempt in range(3):
+        try:
+            with DDGS() as ddgs:
+                results = list(ddgs.text(query, max_results=MAX_SEARCH_RESULTS))
+                if results:
+                    return results
+        except Exception:
+            if attempt < 2:
+                time.sleep(2 ** attempt)  # 1s, 2s backoff
+    return []
+
+
+def _html_search(query: str) -> list:
+    """Fallback: scrape DuckDuckGo HTML directly."""
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9",
+        }
+        url = f"https://html.duckduckgo.com/html/?q={requests.utils.quote(query)}"
+        resp = requests.get(url, headers=headers, timeout=15)
+        soup = BeautifulSoup(resp.text, "html.parser")
+        results = []
+        for r in soup.select(".result__body")[:MAX_SEARCH_RESULTS]:
+            title_el = r.select_one(".result__title")
+            url_el = r.select_one(".result__url")
+            snippet_el = r.select_one(".result__snippet")
+            if title_el and snippet_el:
+                results.append({
+                    "title": title_el.get_text(strip=True),
+                    "href": f"https://{url_el.get_text(strip=True)}" if url_el else "",
+                    "body": snippet_el.get_text(strip=True),
+                })
+        return results
+    except Exception:
+        return []
 
 
 # ── Tool 1: Web Search ────────────────────────────────────────────────────────
@@ -13,23 +55,22 @@ def web_search(query: str) -> str:
     Use this when you need current information or facts about any topic.
     Input should be a clear search query string.
     """
-    try:
-        results = []
-        with DDGS() as ddgs:
-            for r in ddgs.text(query, max_results=MAX_SEARCH_RESULTS):
-                results.append(
-                    f"Title: {r['title']}\n"
-                    f"URL: {r['href']}\n"
-                    f"Summary: {r['body']}\n"
-                )
+    # Try DDGS API first, fall back to HTML scrape
+    results = _ddg_search(query)
+    if not results:
+        results = _html_search(query)
 
-        if not results:
-            return "No results found for that query."
+    if not results:
+        return f"No results found for: {query}. Try rephrasing the query."
 
-        return "\n---\n".join(results)
-
-    except Exception as e:
-        return f"Search failed: {e}"
+    formatted = []
+    for r in results:
+        formatted.append(
+            f"Title: {r.get('title', 'N/A')}\n"
+            f"URL: {r.get('href', 'N/A')}\n"
+            f"Summary: {r.get('body', 'N/A')}\n"
+        )
+    return "\n---\n".join(formatted)
 
 
 # ── Tool 2: Scrape Website ────────────────────────────────────────────────────
