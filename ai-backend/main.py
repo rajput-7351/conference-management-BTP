@@ -9,8 +9,8 @@ import traceback
 import rag_engine
 from agent import create_agent, run_agent, get_final_answer
 
-# Global variables for simple demo state
-global_rag_chain = None
+# Global variables
+global_rag_retriever = None   # BM25 retriever, rebuilt on each PDF upload
 research_agent = None
 
 @asynccontextmanager
@@ -49,21 +49,21 @@ async def root():
 
 @app.post("/api/rag/upload")
 async def upload_pdf(file: UploadFile = File(...)):
-    global global_rag_chain
+    global global_rag_retriever
     try:
-        chain, chunks = rag_engine.process_pdf(file.file)
-        global_rag_chain = chain
+        retriever, chunks = rag_engine.process_pdf(file.file)
+        global_rag_retriever = retriever
         return {"success": True, "chunks": chunks, "message": f"Successfully indexed {chunks} chunks."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/rag/ask")
 async def ask_rag(request: QueryRequest):
-    global global_rag_chain
-    if not global_rag_chain:
+    global global_rag_retriever
+    if not global_rag_retriever:
         raise HTTPException(status_code=400, detail="No PDF processed yet. Please upload a PDF first.")
     try:
-        answer, sources = rag_engine.ask_question(global_rag_chain, request.query, request.session_id)
+        answer, sources = rag_engine.ask_question(global_rag_retriever, request.query, request.session_id)
         safe_sources = [doc.page_content[:300] + "..." for doc in sources] if sources else []
         return {"answer": answer, "sources": safe_sources}
     except Exception as e:
